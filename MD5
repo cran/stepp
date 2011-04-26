@@ -1,0 +1,10 @@
+bd80122569f9e9167f01e62340aa301f *CONTENTS
+b3599097dd6a9f2c21b557f03a0d9048 *DESCRIPTION
+63383942e6ccedada336c6481c474c54 *NAMESPACE
+86bc807bd702e9519b66c51ca7a2e73d *R/stepp.R
+fde4f11c136e7f613b7186d1e33f3feb *man/stepp.Rd
+b585802152f860b183daff73c6b058fe *man/steppCI.Rd
+b2dc50a4dd29e595dfe0b875b4df9795 *man/steppObj.Rd
+5a060985f58ab44da0f61dea36fce705 *man/stepp_plot.Rd
+173cade8a05521348f29c82efddc1c21 *man/stepp_print.Rd
+ce426972925c823f8d31d58eb623455c *man/stepp_summary.Rd

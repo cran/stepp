@@ -1,0 +1,8 @@
+Entry: analyze.KM.stepp
+       analyze.CumInc.stepp
+       stepp
+       plot.stepp
+       print.stepp
+       summary.stepp
+Keywords: 
+Description: Subpopulation Treatment Effect Pattern Plot Analysis (STEPP)
