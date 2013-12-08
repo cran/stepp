@@ -1,12 +1,43 @@
-# Default NAMESPACE created by R
-# Remove the previous line if you edit this file
-
-# Export all names
-exportPattern(".")
-
 # Import all packages listed as Imports or Depends
+
+useDynLib(stepp)
+
 import(
-  cmprsk,
+  methods,
+  car,
   survival,
   splines
+)
+
+export(	stepp,
+       	stepp_summary,
+       	stepp_print,
+       	stepp_plot,
+	analyze.KM.stepp,
+	analyze.CumInc.stepp,
+	summary,
+	print,
+	plot,
+	generate,
+	estimate,
+	test,
+	stepp.win,
+	stepp.subpop,
+	stepp.KM,
+	stepp.COX,
+	stepp.CI,
+	stepp.GLM,
+	stepp.test
+)
+
+
+exportClass(
+	stwin,
+	stsubpop,
+	stmodelKM,
+	stmodelCOX,
+	stmodelCI,
+	stmodelGLM,
+	stmodel,
+	steppes
 )
