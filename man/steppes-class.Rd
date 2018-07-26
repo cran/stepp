@@ -37,16 +37,16 @@
 }
 \section{Methods}{
   \describe{
-    \item{estimate}{\code{signature(.Object = "steppes")}: \cr
-	estimate the effect in absolute and relative scale of the overall and each subpopulation }
-    \item{plot}{\code{signature(x = "steppes")}: \cr
+    \item{estimate}{\code{signature(.Object = "steppes", sp, model)}: \cr
+	estimate the effect in absolute and relative scale of the overall and each subpopulation for the specified subpopulation using the specified model. }
+    \item{plot}{\code{signature(.Object = "steppes")}: \cr
 	generate the three stepp plots}
-    \item{print}{\code{signature(x = "steppes")}: \cr
+    \item{print}{\code{signature(.Object = "steppes", estimate=TRUE, cov=TRUE, test=TRUE)}: \cr
 	print the estimates, covariance matrices and statistics from the stepp analysis }
-    \item{summary}{\code{signature(object = "steppes")}: \cr
+    \item{summary}{\code{signature(.Object = "steppes")}: \cr
 	produce a summary of the steppes object }
-    \item{test}{\code{signature(.Object = "steppes")}: \cr
-	perform the permutation tests and obtain various statistics  }
+    \item{test}{\code{signature(.Object = "steppes", nperm=100, showstatus=TRUE)}: \cr
+	perform the permutation tests and obtain various statistics. Number of permutation is default to 100 and status bar to show.}
   }
 }
 
@@ -66,10 +66,9 @@
 
 \seealso{
   \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}},  \code{\linkS4class{stmodelKM}}, 
-  \code{\linkS4class{stmodelCOX}},\code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
-                                  \code{\linkS4class{stmodel}}, 
+  \code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}},\code{\linkS4class{stmodel}}, 
   \code{\link{stepp.win}},        \code{\link{stepp.subpop}},     \code{\link{stepp.KM}},
-  \code{\link{stepp.CI}},         \code{\link{stepp.COX}},        \code{\link{stepp.GLM}},
+  \code{\link{stepp.CI}},         \code{\link{stepp.GLM}},
   \code{\link{stepp.test}},       \code{\link{estimate}},         \code{\link{generate}}
 
 }

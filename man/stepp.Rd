@@ -2,12 +2,12 @@
 \alias{stepp}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  analyze survival or competing risks data
+  Analyze survival or competing risks data
 }
 
 \description{
-  This method will be deprecated in the future.  Please use S4 classes e.g. stmodelCI for
-  future development.
+  This method will be deprecated in the future.  Please use S4 classes (stmodelCI, stmodelKM) 
+  and corresponding constructors (stepp.CI and stepp.KM) for future development.
 
   A method to explore the treatment-effect interactions in either survival or competing risks data
   arising from two treatment arms of a clinical trial. A permutation distribution approach
@@ -29,8 +29,9 @@
   \item{trttype}{type of analysis methods to use: "KM" for Kaplan-Maier and "CI" for Cumulative Incidence}
   \item{coltrt}{the treatment variable}
   \item{coltime}{the time to event variable}
-  \item{colcens}{the censoring variable}
-  \item{coltype}{variable with distinct codes for different causes of failure where coltype=0 for censored observations; coltype=1 for event of interest; coltype=2 for other causes of failure}
+  \item{colcens}{the censoring variable. If specified, the KM method will be used}
+  \item{coltype}{variable with distinct codes for different causes of failure where coltype=0 for censored observations; 
+        coltype=1 for event of interest; coltype=2 for other causes of failure. If specified, the cumulative incidence method will be used.}
   \item{colvar}{the covariate of interest}
   \item{trts}{a vector containing the codes for the 2 treatment arms, 1st and 2nd treatment arms, respectively}
   \item{patspop}{larger parameter(r2) for subpopulation construction that determines how many patients are in each subpopulation}
@@ -114,7 +115,11 @@
 }
 
 \seealso{
-  The S4 classes: stwin, stsubpop, stmodelKM, stmodelCI, stmodelCOX, stmodelGLM, and steppes.
+  \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}},  \code{\linkS4class{stmodelKM}}, 
+  \code{\linkS4class{stmodelCI}}, \code{\linkS4class{steppes}},   \code{\linkS4class{stmodel}}, 
+  \code{\link{stepp.win}},        \code{\link{stepp.subpop}},     \code{\link{stepp.KM}},
+  \code{\link{stepp.CI}},                                         
+  \code{\link{stepp.test}},       \code{\link{estimate}},         \code{\link{generate}},
 
   Old functions to be deprecated: stepp_summary, stepp_print, stepp_plot, analyze.KM.stepp and analyze.CumInc.stepp. 
 

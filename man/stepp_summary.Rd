@@ -2,11 +2,11 @@
 \alias{stepp_summary}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  produce a summary of the size and various attributes of each subpopulation
+  The function to produce a summary of the size and various attributes of each subpopulation
 }
 
 \description{
-  This method will be deprecated in the future.  Please use S4 classes and 
+  This function will be deprecated in the future.  Please use S4 classes and 
   corresponding generic functions e.g. summary, print and plot for future development.
 
   A method to print the summary of the size and various attributes for

@@ -1,8 +1,8 @@
-\name{big}
-\alias{big}
+\name{bigKM}
+\alias{bigKM}
 \docType{data}
 \title{
-  the big data set.
+  The BIG 1-98 trial dataset for Kaplan-Meier STEPP.
 }
 
 \description{
@@ -12,13 +12,12 @@
   cell proliferation, were analyzed using STEPP.  The STEPP analysis showed that letrozole was more effective than tamoxifen for patients with 
   tumors expressing the highest levels of the Ki-67 labeling index.  The two treatment arms are letrozole and tamoxifen. 
 
-  The data set contained here is a "simulated" data set based on the actual data from the BIG 1-98 clinical trial.  
 }
 
-\usage{data(big)}
+\usage{data(bigKM)}
 \format{
   There are four columns of numeric values: 
- 	rxgroup (treatment group),
+ 	trt (treatment group),
 	time (time to event),
 	event (competing event types), and
 	ki67 (continuous measurement of biomarker Ki-67).
@@ -38,12 +37,12 @@
 }
 
 \examples{
-data(big)
+data(bigKM)
 
-rxgroup <- big$rxgroup
-time    <- big$time
-evt     <- big$event
-cov     <- big$ki67
+rxgroup <- bigKM$trt
+time    <- bigKM$time
+evt     <- bigKM$event
+cov     <- bigKM$ki67
 
 # analyze using Cumulative Incidence method with
 # sliding window size of 150 patients and a maximum of 50 patients in common
@@ -53,22 +52,22 @@ subp    <- new("stsubpop")                             # create subpopulation ob
 subp    <- generate(subp, win=swin, covariate=cov) # generate the subpopulations
 summary(subp)					   # summary of the subpopulations
 
-# create a stepp model using Cumulative Incidences to analyze the data
+# create a stepp model using Kaplan Meier Method to analyze the data
 #
-smodel  <- new("stmodelCI", coltrt=rxgroup, trts=c(1,2), coltime=time, coltype=evt, timePoint=4)
+smodel  <- new("stmodelKM", coltrt=rxgroup, trts=c(1,2), survTime=time, censor=evt, timePoint=4)
 
-statCI  <- new("steppes")		  # create a test object based on subpopulation and window
-statCI  <- estimate(statCI, subp, smodel) # estimate the subpo10ulation results
+statKM  <- new("steppes")		  # create a test object based on subpopulation and window
+statKM  <- estimate(statKM, subp, smodel) # estimate the subpo10ulation results
 # Warning: In this example, the permutations have been set to 0 to allow the function
 # to finish in a short amount of time.  IT IS RECOMMEND TO USE AT LEAST 2500 PERMUTATIONS TO 
 # PROVIDE STABLE RESULTS.
-statCI  <- test(statCI, nperm=0)       # permutation test with 0 iterations
+statKM  <- test(statKM, nperm=0)       # permutation test with 0 iterations
 
-print(statCI)				  # print the estimates and test statistics
-plot(statCI, ncex=0.65, legendy=30, pline=-15.5, color=c("blue","gold"),
+print(statKM)				  # print the estimates and test statistics
+plot(statKM, ncex=0.65, legendy=30, pline=-15.5, color=c("blue","gold"),
         pointwise=FALSE, 
         xlabel="Median Ki-67 LI in Subpopulation (\% immunoreactivity)",
-        ylabel="4-year Cumulative Incidence", 
+        ylabel="4-year Disease Free Survival", 
         tlegend=c("Taxmoxifen", "Letrozole"), nlas=3)
 
 

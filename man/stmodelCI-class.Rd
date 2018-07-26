@@ -24,7 +24,7 @@
     \item{\code{coltype}:}{Object of class \code{"numeric"} \cr
 	variable with distinct codes for different causes of failure where coltype=0 for censored observations; coltype=1 for event of interest; coltype=2 for other causes of failure}
     \item{\code{trts}:}{Object of class \code{"numeric"} \cr
-	a vector containing the codes for the 2 treatment arms, 1st and 2nd treatment arms, respectively}
+	a vector containing the codes for the 2 treatment groups, 1st and 2nd treatment groups, respectively}
     \item{\code{timePoint}:}{Object of class \code{"numeric"} \cr
 	timepoint to estimate survival}
   }
@@ -38,7 +38,7 @@ Class \code{"\linkS4class{stmodel}"}, directly.
   \describe{
     \item{estimate}{\code{signature(.Object = "stmodelCI")}: \cr
 	estimate the effect in absolute and relative scale of the overall and each subpopulation }
-    \item{print}{\code{signature(x = "stmodelCI")}: \cr
+    \item{print}{\code{signature(.Object = "stmodelCI")}: \cr
 	print the estimate, covariance matrices and statistics }
     \item{test}{\code{signature(.Object = "stmodelCI")}: \cr
 	perform the permutation tests or GEE and obtain various statistics }
@@ -87,10 +87,10 @@ Class \code{"\linkS4class{stmodel}"}, directly.
 
 \seealso{
   \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}},  \code{\linkS4class{stmodelKM}}, 
-  \code{\linkS4class{stmodelCOX}},\code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
+  \code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
   \code{\linkS4class{steppes}},   \code{\linkS4class{stmodel}}, 
   \code{\link{stepp.win}},        \code{\link{stepp.subpop}},     \code{\link{stepp.KM}},
-                                  \code{\link{stepp.COX}},        \code{\link{stepp.GLM}},
+                                  \code{\link{stepp.GLM}},
   \code{\link{stepp.test}},       \code{\link{estimate}},         \code{\link{generate}}
 
 }

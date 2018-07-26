@@ -6,7 +6,6 @@
 # stepp model         #
 #######################
 setClassUnion("stmodel",
-	        c("stmodelGLM","stmodelCOX","stmodelKM","stmodelCI")
+	        c("stmodelGLM","stmodelKM","stmodelCI")
 		  )  
-
 

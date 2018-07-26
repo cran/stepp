@@ -2,12 +2,12 @@
 \alias{analyze.KM.stepp}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  analyze survival data using Kaplan-Maier method
+  Analyze survival data using Kaplan-Meier method
 }
 
 \description{
-  This method will be deprecated in the future.  Please use S4 classes e.g. stmodelKM for
-  future development.
+  This method will be deprecated in the future.  Please use the constructor function stepp.KM to
+  create a STEPP Kaplan-Meier model for future development.
 
   A method to explore the treatment-covariate interactions in survival data arising 
   from two treatment arms of a clinical trial. The treatment effects are measured using survival 
@@ -128,7 +128,10 @@
 }
 
 \seealso{
-  The S4 classes: stwin, stsubpop, stmodelKM, stmodelCI, stmodelCOX, stmodelGLM, and steppes.
+  \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}},  \code{\linkS4class{stmodelKM}}, 
+  \code{\linkS4class{steppes}},   \code{\linkS4class{stmodel}}, 
+  \code{\link{stepp.win}},        \code{\link{stepp.subpop}},     \code{\link{stepp.KM}},
+  \code{\link{stepp.test}},       \code{\link{estimate}},         \code{\link{generate}}
 
   Old functions to be deprecated: stepp, stepp_summary, stepp_print, stepp_plot, and analyze.CumInc.stepp. 
 

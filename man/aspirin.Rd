@@ -2,39 +2,35 @@
 \alias{aspirin}
 \docType{data}
 \title{
-  the aspirin data set.
+  The aspirin data set.
 }
 
 \description{
-  The "aspirin" data set is the data from the Aspirin/Folate Polyp Prevention Study Group collaborative investigating the effect of
-  aspirin on the outcome of any occurrence of a colorectal adenoma and any occurrence of an advanced leson.  There
-  are 1,121 subjects randomized to three doses of aspirin (placebo, 81 mg/day and 325 mg/day).  The subjects were
-  followed for three years and then underwent colonoscopy.  Follow-up information is available for 1,084 subjects.
-  The remainder did not undergo a follow-up exam.
-
-  The data set contained here is a "simulated" data set based on the actual data from the Aspirin/Folate Polyp Prevention Study.  
+  The "aspirin" data set was obtained with permission from the Polyp Prevention Study Group. The data are from a randomized clinical trial
+  comparing two dosages of daily aspirin (81 mg or 325 mg/day) versus placebo for the prevention of colorectal adenomas among people having 
+  a prior history of these lesions.  The study randomized a total of 1,121 participants to the three treatment groups.  After an approximately 
+  three-year treatment period, 1,084 participants underwent follow-up colonoscopy. The primary endpoint of the trial was the occurrence of
+  one or more large-bowel adenomas.  Secondary endpoints included the occurrence of any advanced lesion (i.e., adenomas having high-risk 
+  characteristics or invasive cancer).
 }
 
 \usage{data(aspirin)}
 \format{
   The data set has the following columns:
-    ID   - Patient ID number
-    DOSE - Randomized aspirin dose (0=placebo)
-    AGE  - Age of the patient
-    HT   - Height (in meters)
-    WT   - Weight (in Kg)
-    G    - Gender (M or F)
-    AD   - Any adenoma (0=no, 1=yes, .=no exam)
-    LE   - Any advanced lesion (0=no, 1=yes, .=noexam)
+    DOSE - Randomized aspirin dose (0=placebo);
+    AGE  - Age of the participant in years at baseline;
+    G    - Gender of the participant (M or F)
+    AD   - Occurrence of any adenoma at follow-up (0=no, 1=yes, .=missing);
+    AL   - Occurrence of any advanced lesion at follow-up(0=no, 1=yes, .=missing)
 }
 
 \source{
-  The Aspirin/Folate Polyp Prevention Study Group collaborative is acknowledged for permission to use the data from 
+  The Polyp Prevention Study Group is acknowledged for granting permission to use the data from 
   the Aspirin/Folate Polyp Prevention study.
 }
 
 \references{
-  Baron J et al (2003), "A Randomized Trial of Aspirin to prevent Colorectal Adenomas." n engl j med 2003;234:891-9.
+  Baron J, Cole BF, Sandler RS, et al (2003), "A Randomized Trial of Aspirin to prevent Colorectal Adenomas." n engl j med 2003;234:891-9.
 }
 
 \examples{
@@ -42,12 +38,6 @@ data(aspirin)
 
 # remove cases with missing data
 aspirinc <- aspirin[complete.cases(aspirin),]
-
-# model matrix can only handle numeric data
-# convert to 0, 1 encoding for gender
-GENDER    <- as.numeric( aspirinc[,"G"] == "M")
-aspirinc  <- cbind(aspirinc, GENDER)
-remove("GENDER")
 
 # make a subset of patients with placebo and 81 mg
 attach(aspirinc)
@@ -64,7 +54,7 @@ attach(aspirin1)
 inc_win     <- stepp.win(type="sliding", r1=30, r2=100)
 inc_sp      <- stepp.subpop(swin=inc_win, cov=AGE)
 
-ADorLE      <- as.numeric(AD | LE)
+ADorLE      <- as.numeric(AD==1 | AL==1)
 modelA      <- stepp.GLM(coltrt=trtA, trts=c(0,1), colY=ADorLE, glm="binomial", debug=0)
 # Warning: In this example, the permutations have been set to 50 to allow the function
 # to finish in a short amount of time.  IT IS RECOMMEND TO USE AT LEAST 2500 PERMUTATIONS TO 

@@ -2,7 +2,7 @@
 \alias{stepp.subpop}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-	a method to create the stsubpop object and generate the subpopulations based on the
+	The constructor to create the stsubpop object and generate the subpopulations based on the
 	specified stepp window and covariate of interest
 }
 \description{
@@ -19,7 +19,7 @@ stepp.subpop(swin, cov)
 }
 
 \value{
-  It returns the stsubpop object with subpopulations generated.
+  It returns the stsubpop object with subpopulations generated. 
 }
 
 \author{
@@ -28,10 +28,10 @@ stepp.subpop(swin, cov)
 
 \seealso{
   \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}},  \code{\linkS4class{stmodelKM}}, 
-  \code{\linkS4class{stmodelCOX}},\code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
+  \code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
   \code{\linkS4class{steppes}},   \code{\linkS4class{stmodel}}, 
   \code{\link{stepp.win}},                                        \code{\link{stepp.KM}},
-  \code{\link{stepp.CI}},         \code{\link{stepp.COX}},        \code{\link{stepp.GLM}},
+  \code{\link{stepp.CI}},         \code{\link{stepp.GLM}},
   \code{\link{stepp.test}},       \code{\link{estimate}},         \code{\link{generate}}
 
 }

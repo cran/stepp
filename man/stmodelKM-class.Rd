@@ -24,7 +24,7 @@
     \item{\code{censor}:}{Object of class \code{"numeric"} \cr
 	the censor variable}
     \item{\code{trts}:}{Object of class \code{"numeric"} \cr
-	a vector containing the codes for the 2 treatment arms, 1st and 2nd treatment arms, respectively}
+	a vector containing the codes for the 2 treatment groups, first and second treatment groups, respectively}
     \item{\code{timePoint}:}{Object of class \code{"numeric"} \cr
 	timepoint to estimate survival}
   }
@@ -36,7 +36,7 @@ Class \code{"\linkS4class{stmodel}"}, directly.
   \describe{
     \item{estimate}{\code{signature(.Object = "stmodelKM")}:  \cr
 	estimate the effect in absolute and relative scale of the overall population and each subpopulation.  }
-    \item{print}{\code{signature(x = "stmodelKM")}: \cr
+    \item{print}{\code{signature(.Object = "stmodelKM")}: \cr
 	print the estimate, covariance matrices and statistics. }
     \item{test}{\code{signature(.Object = "stmodelKM")}:  \cr
 	perform the permutation tests or GEE and obtain various statistics. }
@@ -49,33 +49,31 @@ Class \code{"\linkS4class{stmodel}"}, directly.
   The estimate method returns a list with the following fields:
 
   \item{model}{the stepp model - "KMe"}
-  \item{sObs1}{a vector of effect estimates of all subpopulations based on the 1st treatment}
-  \item{sSE1}{a vector of standard errors of effect estimates of all subpopulations based on the 1st treatment}
-  \item{oObs1}{effect estimate of the entire population based on the 1st treatment}
-  \item{oSE1}{the standard error of the effect estimate of the entire population based on the 1st treatment}
-  \item{sObs2}{a vector of effect estimates of all subpopulations based on the 1st treatment}
-  \item{sSE2}{a vector of standard errors of effect estimates of all subpopulations based on the 1st treatment}
-  \item{oObs2}{effect estimate of the entire population based on the 1st treatment}
-  \item{oSE2}{the standard error of the effect estimate of the entire population based on the 1st treatment}
+  \item{sObs1}{a vector of effect estimates of all subpopulations based on the first treatment}
+  \item{sSE1}{a vector of standard errors of effect estimates of all subpopulations based on the first treatment}
+  \item{oObs1}{effect estimate of the entire population based on the first treatment}
+  \item{oSE1}{the standard error of the effect estimate of the entire population based on the first treatment}
+  \item{sObs2}{a vector of effect estimates of all subpopulations based on the group treatment}
+  \item{sSE2}{a vector of standard errors of effect estimates of all subpopulations based on the first treatment}
+  \item{oObs2}{effect estimate of the entire population based on the first treatment}
+  \item{oSE2}{the standard error of the effect estimate of the entire population based on the first treatment}
   \item{skmw}{Wald's statistics for the effect estimate differences between the two treatments}
-  \item{logHR}{a vector of log hazard ratio estimate of the subpopulations comparing 1st and 2nd treatments}
-  \item{logHRSE}{a vector of standard error of the log hazard ratio estimate of the subpopulations comparing 1st and 2nd treatments}
-  \item{ologHR}{the log hazard ratio estimate of the entire population comparing 1st and 2nd treatments}
-  \item{ologHRSE}{the standard error of the log hazard ratio estimate of the entire population comparing 1st and 2nd treatments}
-  \item{logHRw}{Wald's statistics for the log hazard ratio between the two treatments}
+  \item{logHR}{a vector of log hazard ratio estimate of the subpopulations comparing first and second treatments}
+  \item{logHRSE}{a vector of standard error of the log hazard ratio estimate of the subpopulations comparing first and second treatment}
+  \item{ologHR}{the log hazard ratio estimate of the entire population comparing first and second treatment}
+  \item{ologHRSE}{the standard error of the log hazard ratio estimate of the entire population comparing first and second treatment}
+  \item{logHRw}{Wald's statistics for the log hazard ratio between the two treatment}
 
   The test method returns a list with the following fields:
 
   \item{model}{the stepp model - "KMt"}
   \item{sigma}{the covariance matrix for subpopulations based on effect differences}
   \item{hasigma}{the homogeneous association covariance matrix for subpopulations based on effect differences}
-  \item{HRsigma}{the covariance matrix for the subpopulations based on hazard ratio}
-  \item{haHRsigma}{the homogeneous association covariance matrix for subpopulations based on hazard ratio}
+  \item{HRsigma}{the covariance matrix for the subpopulations based on hazard ratios}
+  \item{haHRsigma}{the homogeneous association covariance matrix for subpopulations based on hazard ratios}
   \item{pvalue}{the supremum pvalue based on effect difference}
   \item{chi2pvalue}{the chisquare pvalue based on effect difference}
   \item{hapvalue}{the homogeneous association pvalue based on effect difference}
-  \item{HRpvalue}{the supremum pvalue based on hazard ratio}
-  \item{haHRpvalue}{the homogeneous association pvalue based on hazard ratio}  
 
 }
 
@@ -86,10 +84,10 @@ Wai-Ki YIp
 \seealso{
 
   \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}},  
-  \code{\linkS4class{stmodelCOX}},\code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
+  \code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
   \code{\linkS4class{steppes}},   \code{\linkS4class{stmodel}}, 
   \code{\link{stepp.win}},        \code{\link{stepp.subpop}},     \code{\link{stepp.KM}},
-  \code{\link{stepp.CI}},         \code{\link{stepp.COX}},        \code{\link{stepp.GLM}},
+  \code{\link{stepp.CI}},         \code{\link{stepp.GLM}},
   \code{\link{stepp.test}},       \code{\link{estimate}},         \code{\link{generate}}
 
 }

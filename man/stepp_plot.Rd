@@ -2,11 +2,11 @@
 \alias{stepp_plot}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  generating the stepp plots
+  A function to generate the stepp plots
 }
 
 \description{
-  This method will be deprecated in the future.  Please use S4 classes and its generic
+  This function will be deprecated in the future.  Please use S4 classes and its generic
   function e.g. summary, print and plot for future development.
 
   A method to generate the 3 stepp plots for users to examine the treatment-covariate interactions
@@ -26,7 +26,7 @@
     ncex = 0.7, tlegend=c("Specify 1st Treatment", "Specify 2nd Treatment"), 
     nlas = 0, alpha = 0.05, pointwise = FALSE, diff = TRUE, ci = TRUE, pv = TRUE, 
     showss = TRUE, ylimit=c(0,100,-100,100,0,3), dev="", together=FALSE, 
-    noyscale=FALSE, at=NA) 
+    noyscale=FALSE, at=NA, subplot=FALSE) 
 }
 
 \arguments{
@@ -50,6 +50,7 @@
   \item{together}{optional - output the plots to a single file instead of 3 separate files; default is FALSE}
   \item{noyscale}{optional - do not scale to the y-axis; default is FALSE}
   \item{at}{optional - specify the horizontal position of the p-value; use together with pline; default is at the minimal value of x}
+  \item{subplot}{optional - generate a subpopulation distribution subplot on top of the first STEPP plot; default is FALSE (no subplot)}
 }
 
 \details{

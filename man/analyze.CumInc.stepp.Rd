@@ -2,12 +2,12 @@
 \alias{analyze.CumInc.stepp}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  analyze competing risks data using Cumulative Incidence method
+  Analyze competing risks data using Cumulative Incidence method
 }
 
 \description{
-  This method will be deprecated in the future.  Please use S4 classes e.g. stmodelCI for
-  future development.
+  This method will be deprecated in the future.  Please use the constructor function stepp.CI to
+  create a STEPP Cumulative Incidence model for future development.
 
   A method to explore the treatment-effect interactions in competing risks data arising 
   from two treatment arms of a clinical trial. A permutation distribution approach to inference 
@@ -130,7 +130,10 @@
 }
 
 \seealso{
-  The S4 classes: stwin, stsubpop, stmodelKM, stmodelCI, stmodelCOX, stmodelGLM, and steppes.
+  \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}}, \code{\linkS4class{stmodelCI}}, 
+  \code{\linkS4class{steppes}},   \code{\linkS4class{stmodel}}, 
+  \code{\link{stepp.win}},        \code{\link{stepp.subpop}},     \code{\link{stepp.CI}},                                         \code{\link{stepp.GLM}},
+  \code{\link{stepp.test}},       \code{\link{estimate}},         \code{\link{generate}},
 
   Old functions to be deprecated: stepp, stepp_summary, stepp_print, stepp_plot, and analyze.KM.stepp. 
 

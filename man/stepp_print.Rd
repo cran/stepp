@@ -2,11 +2,11 @@
 \alias{stepp_print}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  a method to print the estimate, covariance matrices and test statistics.
+  The function to print the estimate, covariance matrices and test statistics.
 }
 
 \description{
-  This method will be deprecated in the future.  Please use S4 classes and generic
+  This function will be deprecated in the future.  Please use S4 classes and generic
   functions summary, print and plot for future development.
 
   A method to print three essential information resulting from the STEPP analysis.

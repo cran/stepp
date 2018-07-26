@@ -2,11 +2,23 @@
 \alias{stepp.KM}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-	a method to create the stmodelKM object
+	The constructor to create the stmodelKM object
 }
 \description{
-	This is the constructor function for the stmodelKM object.  This object sets up the data with 
-	a stepp model using Kaplan-Meier method for analysis.
+  This is the constructor function for the stmodelKM object.  This object sets up the data with 
+  a stepp model using the Kaplan-Meier method for analysis.\cr
+
+  The model explores the treatment-covariate interactions in survival data arising 
+  from two treatment arms of a clinical trial. The treatment effects are measured using survival 
+  functions at a specified time point estimated from the Kaplan-Meier method and the hazard ratio 
+  based on observed-minus-expected estimation. A permutation distribution approach to inference 
+  is implemented, based on permuting the covariate values within each treatment group. 
+  The statistical significance of observed heterogeneity of treatment effects is calculated using 
+  permutation tests:\cr\cr
+  1) for the maximum difference between each subpopulation effect and the overall population 
+     treatment effect or supremum based test statistic; \cr
+  2) for the difference between each subpopulation effect and the overall population treatment 
+     effect, which resembles the chi-square statistic. 
 }
 \usage{
 	stepp.KM(coltrt, survTime, censor, trts, timePoint)
@@ -16,7 +28,7 @@
   \item{coltrt}{the treatment variable}
   \item{survTime}{the time to event variable}
   \item{censor}{the censor variable}
-  \item{trts}{a vector containing the codes for the 2 treatment arms, 1st and 2nd treatment arms, respectively}
+  \item{trts}{a vector containing the codes for the 2 treatment arms, 1st and 2nd treatment groups, respectively}
   \item{timePoint}{timepoint to estimate survival}
 }
 
@@ -28,12 +40,19 @@
 Wai-Ki Yip
 }
 
+\references{
+  Bonetti M, Gelber RD. Patterns of treatment effects in subsets of patients in clinical trials. Biostatistics 2004; 5(3):465-481.
+
+  Bonetti M, Zahrieh D, Cole BF, Gelber RD. A small sample study of the STEPP approach to assessing treatment-covariate interactions in survival data. Statistics in Medicine 2009; 28(8):1255-68. 
+
+}
+
 \seealso{
   \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}},  \code{\linkS4class{stmodelKM}}, 
-  \code{\linkS4class{stmodelCOX}},\code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
+  \code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}}, 
   \code{\linkS4class{steppes}},   \code{\linkS4class{stmodel}}, 
   \code{\link{stepp.win}},        \code{\link{stepp.subpop}},     
-  \code{\link{stepp.CI}},         \code{\link{stepp.COX}},        \code{\link{stepp.GLM}},
+  \code{\link{stepp.CI}},         \code{\link{stepp.GLM}},
   \code{\link{stepp.test}},       \code{\link{estimate}},         \code{\link{generate}}
 
 }

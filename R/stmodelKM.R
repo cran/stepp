@@ -231,70 +231,90 @@ setMethod("estimate",
 		survTime  <- .Object@survTime
 		censor    <- .Object@censor
  
-		txassign <- rep(NA, length(coltrt))
-		txassign[which(coltrt == trts[1])] <- 1
-		txassign[which(coltrt == trts[2])] <- 0
+		# set up internal assignment
+		ntrts	    <- length(trts)
+		txassign  <- rep(NA, length(coltrt))
 
-		skmObs1   <- rep(0, nsubpop)
-    		skmObs2   <- rep(0, nsubpop)
-    		skmSE1    <- rep(0, nsubpop)
-    		skmSE2    <- rep(0, nsubpop)
-    		logHR     <- rep(0, nsubpop)
-    		logHRSE   <- rep(0, nsubpop)
+		for (j in 1:ntrts) 
+		  txassign[which(coltrt == trts[j])] <- j
+		
+		# set up return structure
+		Obs	<- list(sObs = rep(0,nsubpop),
+				  sSE  = rep(0,nsubpop),
+				  oObs = 0,
+				  oSE  = 0)
+		TrtEff <- array(list(Obs),ntrts)
+		
+		HRs <- list(skmw     = 0,
+				logHR    = rep(0,nsubpop),
+				logHRSE  = rep(0,nsubpop),
+				ologHR   = 0,
+				ologHRSE = 0,
+				logHRw   = 0)
+		Ratios <- array(list(HRs),ntrts-1)
 
-    		for (i in 1:nsubpop) {
-		  trteff1    <- tpest(kmest(survTime[txassign==1 & subpop[,i]==1],
-              		          censor[txassign==1 & subpop[,i]==1]),timePoint)
-		  trteff2    <- tpest(kmest(survTime[txassign==0 & subpop[,i]==1],
-              		          censor[txassign==0 & subpop[,i]==1]),timePoint)
-          	  skmObs1[i] <- max(trteff1$est,0)
-          	  skmObs2[i] <- max(trteff2$est,0)
-          	  skmSE1[i]  <- sqrt(trteff1$var)
-          	  skmSE2[i]  <- sqrt(trteff2$var)
+		# Estimate treatment effect for each treatment j
+		for (j in 1:ntrts) {
 
-          	  LogRank    <- survdiff(Surv(survTime[subpop[,i]==1],censor[subpop[,i]==1])~txassign[subpop[,i]==1])
-          	  logHR[i]   <- -(LogRank$obs[1]-LogRank$exp[1])/LogRank$var[1,1]
-          	  logHRSE[i] <- sqrt(1/LogRank$var[1,1])
+		  skmObs <- rep(0,nsubpop)
+		  skmSE  <- rep(0,nsubpop)
+    		  for (i in 1:nsubpop) {
+		    trteff    <- tpest(kmest(survTime[txassign==j & subpop[,i]==1],
+                		           censor[txassign==j & subpop[,i]==1]),timePoint)
+          	    skmObs[i] <- max(trteff$est,0)
+         	    skmSE[i]  <- sqrt(trteff$var)
+		  }
+		  overalltrteff <- tpest(kmest(survTime[txassign==j],censor[txassign==j]),timePoint)
+    		  overallSkmObs <- max(overalltrteff$est, 0)
+    		  overallSkmSE  <- sqrt(overalltrteff$var)
+
+		  # check to make sure that subpopulation estimates are OK.
+    		  if (sum(is.na(skmObs)) != 0 | is.na(overallSkmObs) != FALSE) {
+          	      cat("\n")
+        	      print(paste("Unable to estimate survival time at ", timePoint, " time-unit(s) for trt ",
+			j, "because there are too few events within one or more subpopulation(s)."))
+        	      print(paste("The problem may be avoided by constructing larger subpopulations and/or by selecting a different timepoint for estimation."))
+        	      stop()
+    		  }
+
+		  TrtEff[[j]]=list(sObs=skmObs, sSE=skmSE, oObs=overallSkmObs, oSE=overallSkmSE)
 		}
-		overalltrteff1 <- tpest(kmest(survTime[txassign==1],censor[txassign==1]),timePoint)
-		overalltrteff2 <- tpest(kmest(survTime[txassign==0],censor[txassign==0]),timePoint)
-    		overallSkmObs1 <- max(overalltrteff1$est, 0)
-    		overallSkmObs2 <- max(overalltrteff2$est, 0)
-    		overallSkmSE1  <- sqrt(overalltrteff1$var)
-    		overallSkmSE2  <- sqrt(overalltrteff2$var)
-    		LogRank        <- survdiff(Surv(survTime,censor) ~ txassign)
-    		overallLogHR   <- -(LogRank$obs[1]-LogRank$exp[1])/LogRank$var[1,1]
-    		overallLogHRSE <- sqrt(1/LogRank$var[1,1])
 
-		# check to make sure that subpopulation estimates are OK.
-    		if (sum(is.na(skmObs1)) != 0 | sum(is.na(skmObs2)) != 0 | 
-              is.na(overallSkmObs1) != FALSE | is.na(overallSkmObs2) != FALSE) {
-          	  cat("\n")
-        	  print(paste("Unable to estimate survival time at ", 
-                          timePoint, " time-unit(s) because there are too few events within one or more subpopulation(s)."))
-        	  print(paste("The problem may be avoided by constructing larger subpopulations and/or by selecting a different timepoint for estimation."))
-        	  stop()
-    		}
+		# Estimate the relative treatment effect comparing each one with trt 1
+		for (j in 2:ntrts) {
+		  txassign <- rep(-1, length(coltrt))
+		  txassign[which(coltrt == trts[1])] <- 1
+		  txassign[which(coltrt == trts[j])] <- 0
 
-		skmw   <- sum((skmObs1-skmObs2)/sqrt(skmSE1^2 + skmSE2^2))
-		logHRw <- sum(logHR/logHRSE)
+		  logHR    <- rep(0,nsubpop)
+		  logHRSE  <- rep(0,nsubpop)
+		  sel      <- txassign==1 | txassign==0 #j
+    		  for (i in 1:nsubpop) {
+		    seli       <- sel & subpop[,i]==1
+          	    LogRank    <- survdiff(Surv(survTime[seli],censor[seli])~txassign[seli])
+          	    logHR[i]   <- -(LogRank$obs[1]-LogRank$exp[1])/LogRank$var[1,1]
+          	    logHRSE[i] <- sqrt(1/LogRank$var[1,1])
+		  }
+    		  LogRank        <- survdiff(Surv(survTime[sel],censor[sel]) ~ txassign[sel])
+    		  overallLogHR   <- -(LogRank$obs[1]-LogRank$exp[1])/LogRank$var[1,1]
+    		  overallLogHRSE <- sqrt(1/LogRank$var[1,1])
+		  logHRw <- sum(logHR/logHRSE)
+		  skmw   <- sum((TrtEff[[1]]$sObs-TrtEff[[j]]$sObs)/sqrt(TrtEff[[1]]$sSE^2 + TrtEff[[j]]$sSE^2))
 
+		  Ratios[[j-1]] = list(skmw     = skmw,
+					     logHR    = logHR,
+					     logHRSE  = logHRSE,
+					     ologHR   = overallLogHR,
+					     ologHRSE = overallLogHRSE,
+					     logHRw   = logHRw)
+
+		}
+
+		# return the estimate as a list
     		estimate <- list( model	   = "KMe",
-					sObs1	   = skmObs1,
-        	            	sSE1     = skmSE1,
-                        	oObs1    = overallSkmObs1,
-                        	oSE1	   = overallSkmSE1,
-                        	sObs2	   = skmObs2,
-                        	sSE2	   = skmSE2,
-                        	oObs2	   = overallSkmObs2,
-                        	oSE2	   = overallSkmSE2,
-					skmw	   = skmw,
-
-					logHR    = logHR,
-					logHRSE  = logHRSE,
-					ologHR   = overallLogHR,
-					ologHRSE = overallLogHRSE,
-					logHRw   = logHRw
+					ntrts	   = ntrts,
+					TrtEff   = TrtEff,
+					Ratios   = Ratios
 				     )
 		return(estimate)
 	    }
@@ -304,286 +324,345 @@ setMethod("estimate",
 setMethod("test",
 	    signature="stmodelKM",
 	    definition=function(.Object, nperm=2500, sp, effect, showstatus=TRUE, Cox=FALSE, MM=NULL, ...){
+
 		test <- NULL
+
+		# no permutation test is done if nperm is 0; return immediately
 		if (nperm > 0){
+		  win		<- sp@win
 		  nsubpop	<- sp@nsubpop
-		  subpop	<- sp@subpop
+		  osubpop	<- sp@subpop
 		  coltrt	<- .Object@coltrt
 		  trts	<- .Object@trts
 		  survTime  <- .Object@survTime
 		  timePoint <- .Object@timePoint
 		  censor    <- .Object@censor
 
-		  txassign <- rep(NA, length(coltrt))
-		  txassign[which(coltrt == trts[1])] <- 1
-		  txassign[which(coltrt == trts[2])] <- 0
+		  # set up internal assignment
+		  ntrts	<- length(trts)
+		  txassign  <- rep(-1, length(coltrt))	# do not use NA here
+
+		  for (j in 1:ntrts) 
+		    txassign[which(coltrt == trts[j])] <- j
+
+		  # set up return structure
+    		  tsigma    <- matrix(rep(0, (nperm * nsubpop)), ncol = nsubpop)		
+		  PermTest	<- list(sigma    = tsigma,
+				  	HRsigma    = tsigma,
+				  	pvalue     = 0,
+					chi2pvalue = 0,
+				  	HRpvalue   = 0)
+		  Res       <- array(list(PermTest),ntrts-1)
+
+		  for (j in 2:ntrts){
 		  #
 		  #   do the permutations
+		  #	compare trt1 with the rest
 		  #
-    		  pvalue      <- NA
-    		  differences <- matrix(rep(0, (nperm * nsubpop)), ncol = nsubpop)
-		  diffha      <- matrix(rep(0, (nperm * nsubpop)), ncol = nsubpop)
-    		  logHRs      <- matrix(rep(0, (nperm * nsubpop)), ncol = nsubpop)
-      	  logHRha     <- matrix(rep(0, (nperm * nsubpop)), ncol = nsubpop)
-    		  tPerm       <- rep(0, nperm)
-    		  no          <- 0
-    		  p           <- 0
-	    	  terminate   <- 0
-    		  Ntemp       <- nrow(subpop)
-    		  IndexSet1   <- (1:Ntemp)[txassign == 1]
-    		  IndexSet2   <- (1:Ntemp)[txassign == 0]
+   		    differences <- matrix(rep(0, (nperm * nsubpop)), ncol = nsubpop)
+    		    logHRs      <- matrix(rep(0, (nperm * nsubpop)), ncol = nsubpop)
+    		    no          <- 0
+    		    p           <- 0
+	    	    terminate   <- 0
+    		    Ntemp       <- nrow(osubpop)
+    		    IndexSet1   <- (1:Ntemp)[txassign == 1]
+    		    IndexSet2   <- (1:Ntemp)[txassign == j]
 
-		  if (Cox) {
-		    if (is.null(MM)){
-		      fmla <- as.formula(paste("Surv(survTime,censor) ~ txassign"))
-		    } else {
-		      xnam <- colnames(MM)[2:dim(MM)[2]]
-		      fmla <- as.formula(paste("Surv(survTime,censor) ~ txassign + ", paste(xnam, collapse= "+")))
-		    }
-		  }
-
-		  if (showstatus){
-		    title <- paste("\nComputing the pvalue with ", nperm)
-		    title <- paste(title, "number of permutations\n")
-		    cat(title)
-	  	    pb <- txtProgressBar(min=0, max=nperm-1, style=3)
-		  }
-
-        	  while (no < nperm) {
-		    ## PERMUTE THE VECTOR OF SUBPOPULATIONS WITHIN TREATMENTS ##
-      	    if (showstatus) setTxtProgressBar(pb, no)
-
-      	    Subpop        <- as.matrix(subpop)
-      	    permuteSubpop <- matrix(0, nrow = Ntemp, ncol = nsubpop)
-      	    permuteSubpop[txassign == 1] <- Subpop[sample(IndexSet1),]
-      	    permuteSubpop[txassign == 0] <- Subpop[sample(IndexSet2),]
-      	    subpop        <- permuteSubpop
-      	    skm1          <- rep(0, nsubpop)
-      	    skm2          <- rep(0, nsubpop)
-		    skmSE1	      <- rep(0, nsubpop)
-		    skmSE2	      <- rep(0, nsubpop)
-      	    slogHRs       <- rep(0, nsubpop)
-		    slogHRSEs     <- rep(0, nsubpop)
-
-      	    for (i in 1:nsubpop) {
-			seff1		<- tpest(kmest(survTime[txassign == 1 & subpop[, i] == 1], censor[txassign == 1 & subpop[, i] == 1]), timePoint)
-      		seff2		<- tpest(kmest(survTime[txassign == 0 & subpop[, i] == 1], censor[txassign == 0 & subpop[, i] == 1]), timePoint) 
-			skm1[i]     <- max(seff1$est, 0)
-        		skm2[i]     <- max(seff2$est, 0)
-          		skmSE1[i]   <- sqrt(seff1$var)
-          		skmSE2[i]   <- sqrt(seff2$var)
-			if (Cox) {
-	        	  CoxM       	<- coxph(fmla, subset=(subpop[,i]==1))
-		  	  if (is.null(MM)){
-	                slogHRs[i]    <- CoxM$coefficient
-	                slogHRSEs[i]  <- sqrt(CoxM$var)
-		  	  } else {
-	                slogHRs[i]    <- CoxM$coefficient[1]
-	                slogHRSEs[i]  <- sqrt(CoxM$var[1,1])  
-			  }
-			} else {
-        		  LogRank         <- survdiff(Surv(survTime[subpop[,i] == 1],censor[subpop[,i] == 1]) ~ txassign[subpop[,i] == 1])
-        		  slogHRs[i]      <- -(LogRank$obs[1]-LogRank$exp[1])/LogRank$var[1,1]
-			  slogHRSEs[i]    <- sqrt(1/LogRank$var[1,1])
-			}
-
-      	    }
-		    skmwha               <- sum((skm1-skm2)/sqrt(skmSE1^2 + skmSE2^2))
-		    slogHRw		       <- sum(slogHRs/slogHRSEs)
-
-      	    overallSkm1          <- max(tpest(kmest(survTime[txassign == 1], censor[txassign == 1]), timePoint)$est, 0)
-      	    overallSkm2          <- max(tpest(kmest(survTime[txassign == 0], censor[txassign == 0]), timePoint)$est, 0)
 		    if (Cox) {
-			CoxM		       <- coxph(fmla)
-		  	if (is.null(MM)){
-		    	  overallSLogHR    <- CoxM$coefficient
-		        overallLogHRSE   <- sqrt(CoxM$var)
-		  	} else {
-		    	  overallSLogHR    <- CoxM$coefficient[1]
-		    	  overallSLogHRSE  <- sqrt(CoxM$var[1,1])
-			}
-		    } else {
-      	      LogRank            <- survdiff(Surv(survTime,censor) ~ txassign)
-      	      overallSLogHR      <- -(LogRank$obs[1]-LogRank$exp[1])/LogRank$var[1,1]
-    		      overallSLogHRSE    <- sqrt(1/LogRank$var[1,1])
+		      if (is.null(MM)){
+		        fmla <- as.formula(paste("Surv(survTime,censor) ~ txassign"))
+		      } else {
+		        xnam <- colnames(MM)[2:dim(MM)[2]]
+		        fmla <- as.formula(paste("Surv(survTime,censor) ~ txassign + ", paste(xnam, collapse= "+")))
+		      }
 		    }
-      	    if (sum(is.na(skm1)) == 0 & sum(is.na(skm2)) == 0 & is.na(overallSkm1) == FALSE & is.na(overallSkm2) == FALSE) {
-        		no <- no + 1
-        		p <- p + 1
-        		for (s in 1:nsubpop) {
-          	  	  differences[p, s] <- (skm1[s] - skm2[s]) - (overallSkm1 - overallSkm2)
-			  diffha[p,s]	  <- (skm1[s] - skm2[s]) - skmwha
-          	  	  logHRs[p,s]       <- slogHRs[s] - overallSLogHR
-			  logHRha[p,s]      <- slogHRs[s] - slogHRw
 
-          	  	}
-      	    }
-      	    terminate <- terminate + 1
-      	    if (terminate >= nperm + 10000) {
-        		print(paste("After permuting ", nperm, "plus 10000, or ", 
-        	      nperm + 10000, " times, the program is unable to generate the permutation distribution based on ", 
-        	      nperm, "permutations of the data"))
-        		print(paste("Consider creating larger subpopulations or selecting a different timepoint for estimation"))
-        		stop()
-      	    }
-    	        }
-	        if (showstatus) close(pb)
+		    if (showstatus){
+		      title <- paste("\nComputing the pvalue with ", nperm)
+		      title <- paste(title, "number of permutations comparing trt",trts[j],"with trt ",trts[1],"\n")
+		      cat(title)
+	  	      pb    <- txtProgressBar(min=0, max=nperm-1, style=3)
+		    }
 
-	        # generating the sigmas and pvalues
-	        sigmas          <- ssigma(differences)
-	        sigma1		<- sigmas$sigma
-	        chi2pvalue   	<- ppv (differences, sigmas$sigmainv, effect$sObs1-effect$sObs2, effect$oObs1-effect$oObs2, nperm)
-	        pvalue     	<- ppv2(differences,                  effect$sObs1-effect$sObs2, effect$oObs1-effect$oObs2, nperm)
+        	    while (no < nperm) {
+		      ## PERMUTE THE VECTOR OF SUBPOPULATIONS WITHIN TREATMENTS ##
+      	      if (showstatus) setTxtProgressBar(pb, no)
 
-	        sigmas          <- ssigma(diffha)
-	        hasigma      	<- sigmas$sigma
-  	        hapvalue     	<- ppv (diffha, sigmas$sigmainv, effect$sObs1-effect$sObs2, effect$skmw, nperm)
+      	      Subpop        <- as.matrix(osubpop)
+      	      permuteSubpop <- matrix(0, nrow = Ntemp, ncol = nsubpop)
+      	      permuteSubpop[txassign == 1] <- Subpop[sample(IndexSet1),]
+      	      permuteSubpop[txassign == j] <- Subpop[sample(IndexSet2),]
+      	      subpop        <- permuteSubpop
+      	      skm1          <- rep(0, nsubpop)
+      	      skm2          <- rep(0, nsubpop)
+		      skmSE1	  <- rep(0, nsubpop)
+		      skmSE2	  <- rep(0, nsubpop)
+      	      slogHRs       <- rep(0, nsubpop)
+		      slogHRSEs     <- rep(0, nsubpop)
 
-	  	  sigmas          <- ssigma(logHRs)
-	  	  HRsigma    	<- sigmas$sigma
-	  	  HRpvalue   	<- ppv2(logHRs, effect$logHR, effect$ologHR, nperm)	
+      	      for (i in 1:nsubpop) {
+			  seff1	  <- tpest(kmest(survTime[txassign == 1 & subpop[, i] == 1], censor[txassign == 1 & subpop[, i] == 1]), timePoint)
+      		  seff2	  <- tpest(kmest(survTime[txassign == j & subpop[, i] == 1], censor[txassign == j & subpop[, i] == 1]), timePoint) 
+			  skm1[i]     <- max(seff1$est, 0)
+        		  skm2[i]     <- max(seff2$est, 0)
+          		  skmSE1[i]   <- sqrt(seff1$var)
+          		  skmSE2[i]   <- sqrt(seff2$var)
+			  sel         <- (txassign == 1 | txassign == j) & subpop[,i]==1
+			  if (Cox) {
+	        	    CoxM       	<- coxph(fmla, subset=(sel))
+		  	    if (is.null(MM)){
+	                  slogHRs[i]    <- CoxM$coefficient
+	                  slogHRSEs[i]  <- sqrt(CoxM$var)
+		  	    } else {
+	                  slogHRs[i]    <- CoxM$coefficient[1]
+	                  slogHRSEs[i]  <- sqrt(CoxM$var[1,1])  
+			    }
+			  } else {
+        		    LogRank         <- survdiff(Surv(survTime[sel],censor[sel]) ~ txassign[sel])
+        		    slogHRs[i]      <- -(LogRank$obs[1]-LogRank$exp[1])/LogRank$var[1,1]
+			    slogHRSEs[i]    <- sqrt(1/LogRank$var[1,1])
+			  }
+      	      }
+			selo         	  <- (txassign == 1 | txassign == j)
 
-	  	  sigmas          <- ssigma(logHRha)
-	  	  haHRsigma    	<- sigmas$sigma
-	  	  haHRpvalue   	<- ppv (logHRha, sigmas$sigmainv, effect$logHR, effect$logHRw, nperm)
+		      slogHRw		  <- sum(slogHRs/slogHRSEs)
 
-	        test = list( model	  = "KMt",
-				   sigma	  = sigma1,
-				   hasigma	  = hasigma,
-				   HRsigma    = HRsigma,
-				   haHRsigma  = haHRsigma,
-				   pvalue	  = pvalue,
-				   chi2pvalue = chi2pvalue,
-				   hapvalue	  = hapvalue,
-				   HRpvalue   = HRpvalue,
-				   haHRpvalue = haHRpvalue
-				  )
-		}
+      	      overallSkm1         <- max(tpest(kmest(survTime[txassign == 1], censor[txassign == 1]), timePoint)$est, 0)
+      	      overallSkm2         <- max(tpest(kmest(survTime[txassign == j], censor[txassign == j]), timePoint)$est, 0)
 
-		return(test)
-	    }
+		      if (Cox) {
+			  CoxM		       <- coxph(fmla, subset=(selo))
+		  	  if (is.null(MM)){
+		    	    overallSLogHR    <- CoxM$coefficient
+		          overallLogHRSE   <- sqrt(CoxM$var)
+		  	  } else {
+		    	    overallSLogHR    <- CoxM$coefficient[1]
+		    	    overallSLogHRSE  <- sqrt(CoxM$var[1,1])
+			  }
+		      } else {
+      	        LogRank            <- survdiff(Surv(survTime[selo],censor[selo]) ~ txassign[selo])
+      	        overallSLogHR      <- -(LogRank$obs[1]-LogRank$exp[1])/LogRank$var[1,1]
+    		        overallSLogHRSE    <- sqrt(1/LogRank$var[1,1])
+		      }
+      	      if (sum(is.na(skm1)) == 0 & sum(is.na(skm2)) == 0 & is.na(overallSkm1) == FALSE & is.na(overallSkm2) == FALSE) {
+        		  no <- no + 1
+        		  p <- p + 1
+        		  for (s in 1:nsubpop) {
+          	  	    differences[p, s] <- (skm1[s] - skm2[s]) - (overallSkm1 - overallSkm2)
+          	  	    logHRs[p,s]       <- slogHRs[s] - overallSLogHR
+          	  	  }
+      	      }
+      	      terminate <- terminate + 1
+      	      if (terminate >= nperm + 10000) {
+        		  print(paste("After permuting ", nperm, "plus 10000, or ", 
+        	          nperm + 10000, " times, the program is unable to generate the permutation distribution based on ", 
+        	          nperm, "permutations of the data"))
+        		  print(paste("Consider creating larger subpopulations or selecting a different timepoint for estimation"))
+			  print(paste("when comparing trt ",trts[1], "vs trt ",trts[j]))
+        		  stop()
+      	      }
+		    }
+	          # generating the sigmas and pvalues
+		    sObs   <- effect$TrtEff[[1]]$sObs-effect$TrtEff[[j]]$sObs
+		    oObs   <- effect$TrtEff[[1]]$oObs-effect$TrtEff[[j]]$oObs
+		    logHR  <- effect$Ratios[[j-1]]$logHR
+		    ologHR <- effect$Ratios[[j-1]]$ologHR
+
+		    mname  <- paste0("SP",seq(1,dim(differences)[2]),"-Overall")
+		    if (win@type == "tail-oriented"){
+		      # remove the trivial case of the full cohort
+		      rm <- length(win@r1)+1
+		      differences <- differences[,-rm]
+		  	mname <- mname[-rm]
+		      sObs <- sObs[-rm]
+		      oObs <- oObs[-rm]
+		      logHRs <- logHRs[,-rm]
+		      logHR <- logHR[-rm]
+		      ologHR <- ologHR[-rm]
+		    }
+
+	          sigmas        		<- ssigma(differences)
+		    rownames(sigmas$sigma)	<- mname
+		    colnames(sigmas$sigma)	<- mname
+	          Res[[j-1]]$sigma		<- sigmas$sigma
+	          Res[[j-1]]$chi2pvalue     <- ppv (differences, sigmas$sigmainv, sObs, oObs, nperm)
+	          Res[[j-1]]$pvalue     	<- ppv2(differences, sObs, oObs, nperm)
+	  	    sigmas        		<- ssigma(logHRs)
+		    rownames(sigmas$sigma)	<- mname
+		    colnames(sigmas$sigma)	<- mname
+	  	    Res[[j-1]]$HRsigma    	<- sigmas$sigma
+	  	    Res[[j-1]]$HRpvalue   	<- ppv2(logHRs, logHR, ologHR, nperm)	
+
+		    if (showstatus) close(pb)
+		  }
+	      test = list( model  = "KMt",
+				 ntrts  = ntrts,
+				 Res    = Res
+				)
+	  }
+	return(test)
+  }
 )
 
 #
 # printing support functions for KM model
 #
-print.estimate.KM <- function(x, timePoint){
-	cat("\n")
-      write(paste("Survival estimates for treatment group", x@model@trts[1], 
-            	"at time point", timePoint), file = "")
-        	temp <- matrix(c(1:x@subpop@nsubpop, round(x@effect$sObs1, digits = 4), round(x@effect$sSE1, 
-            	digits = 4)), ncol = 3)
+print.estimate.KM <- function(x, timePoint, trts){
+
+	for (j in 1:x@effect$ntrts){
+		cat("\n")
+      	write(paste("Survival estimates for treatment group", trts[j], 
+            		"at time point", timePoint), file = "")
+
+        	temp <- matrix(c(1:x@subpop@nsubpop, round(x@effect$TrtEff[[j]]$sObs, digits = 4),
+				     round(x@effect$TrtEff[[j]]$sSE, digits = 4)), ncol = 3)
         	write("                         Survival", file = "")
         	write("     Subpopulation     Probability      Std. Err.", 
             	file = "")
         	for (i in 1:x@subpop@nsubpop) {
-              write(paste(format(temp[i, 1], width = 12), format(temp[i, 
-                2], width = 19, nsmall = 4), format(temp[i, 3], width = 15, 
-                nsmall = 4)), file = "")
+		  if (x@subpop@win@type == "tail-oriented" & i == (length(x@subpop@win@r1)+1)){
+                write(paste(format(temp[i, 1], width = 12), format(temp[i,2], width = 19, nsmall = 4),
+				    format(temp[i, 3], width = 15, nsmall = 4), "Overall"), file = "")
+		  } else {
+                write(paste(format(temp[i, 1], width = 12), format(temp[i,2], width = 19, nsmall = 4),
+				    format(temp[i, 3], width = 15, nsmall = 4)), file = "")
+		  }
         	}
-        	write(paste("        Overall", format(round(x@effect$oObs1, 
-            	digits = 4), nsmall = 4, width = 16), format(round(x@effect$oSE1, 
-            	digits = 4), nsmall = 4, width = 15)), file = "")
+	      if (x@subpop@win@type != "tail-oriented"){
+        	  write(paste("        Overall", 
+		  		  format(round(x@effect$TrtEff[[j]]$oObs, digits = 4), nsmall = 4, width = 16), 
+				  format(round(x@effect$TrtEff[[j]]$oSE, digits = 4), nsmall = 4, width = 15)), 
+				  file = "")
+		}
         	cat("\n")
-        	write(paste("Survival estimates for treatment group", x@model@trts[2], 
-            	"at time point", timePoint), file = "")
-        	temp <- matrix(c(1:x@subpop@nsubpop, round(x@effect$sObs2, digits = 4), round(x@effect$sSE2, 
-            	digits = 4)), ncol = 3)
-        	write("                         Survival", file = "")
-        	write("     Subpopulation     Probability      Std. Err.", 
-            	file = "")
-        	for (i in 1:x@subpop@nsubpop) {
-              write(paste(format(temp[i, 1], width = 12), format(temp[i, 
-                2], width = 19, nsmall = 4), format(temp[i, 3], width = 15, 
-                nsmall = 4)), file = "")
-        	}
-        	write(paste("        Overall", format(round(x@effect$oObs2, 
-            	digits = 4), nsmall = 4, width = 16), format(round(x@effect$oSE2, 
-            	digits = 4), nsmall = 4, width = 15)), file = "")
-        	cat("\n")
-        	write(paste("Survival differences at time point", timePoint), 
-            	file = "")
-        	temp <- matrix(c(1:x@subpop@nsubpop, round(x@effect$sObs1 - x@effect$sObs2, digits = 4), 
-          	round(sqrt(x@effect$sSE1^2 + x@effect$sSE2^2), digits = 4)), ncol = 3)
+	}
+
+      cat("\n")
+      write("Survival differences at time point and hazard ratio estimates", file = "")
+
+	for (j in 2:x@effect$ntrts){
+	  	cat("\n")
+	  	write(paste("trt ", trts[j], "vs. trt ", trts[1]), file = "")
+
+        	temp <- matrix(c(1:x@subpop@nsubpop, 
+			round(x@effect$TrtEff[[1]]$sObs - x@effect$TrtEff[[j]]$sObs, digits = 4), 
+          		round(sqrt(x@effect$TrtEff[[1]]$sSE^2 + x@effect$TrtEff[[j]]$sSE^2), digits = 4)), ncol = 3)
+		cat("\n")
+      	write(paste("Survival differences at time point", timePoint), file = "")
+
+		write(paste("Comparing trt ", trts[j], " vs. trt ", trts[1]), file = "")
+		cat("\n")
         	write("                         Survival", file = "")
         	write("     Subpopulation      Difference      Std. Err.", 
             	file = "")
         	for (i in 1:x@subpop@nsubpop) {
-              write(paste(format(temp[i, 1], width = 12), format(temp[i, 
-                2], width = 19, nsmall = 4), format(temp[i, 3], width = 15, 
-                nsmall = 4)), file = "")
+		  if (x@subpop@win@type == "tail-oriented" & i == (length(x@subpop@win@r1)+1)){
+                write(paste(format(temp[i, 1], width = 12), format(temp[i, 2], width = 19, nsmall = 4), 
+				    format(temp[i, 3], width = 15, nsmall = 4), "Overall"), file = "")
+		  } else {
+                write(paste(format(temp[i, 1], width = 12), format(temp[i, 2], width = 19, nsmall = 4), 
+				    format(temp[i, 3], width = 15, nsmall = 4)), file = "")
+		  }
         	}
-        	write(paste("        Overall", format(round(x@effect$oObs1 - 
-            	x@effect$oObs2, digits = 4), nsmall = 4, width = 16), 
-            	format(round(sqrt(x@effect$oSE1^2 + x@effect$oSE2^2), 
-                	digits = 4), nsmall = 4, width = 15)), file = "")
+	      if (x@subpop@win@type != "tail-oriented"){
+        	  write(paste("        Overall", 
+				  format(round(x@effect$TrtEff[[1]]$oObs - x@effect$TrtEff[[j]]$oObs, digits = 4), nsmall = 4, width = 16), 
+            		  format(round(sqrt(x@effect$TrtEff[[1]]$oSE^2 + x@effect$TrtEff[[j]]$oSE^2), digits = 4), nsmall = 4, width = 15)),
+				  file = "")
+		}
         	cat("\n")
         	write("Hazard ratio estimates", file = "")
-        	temp <- matrix(c(1:x@subpop@nsubpop, round(x@effect$logHR, digits = 6), round(x@effect$logHRSE, 
-            	digits = 6), round(exp(x@effect$logHR), digits = 2)), ncol = 4)
+        	temp <- matrix(c(1:x@subpop@nsubpop, 
+					round(x@effect$Ratios[[j-1]]$logHR, digits = 6), 
+					round(x@effect$Ratios[[j-1]]$logHRSE, digits = 6), 
+					round(exp(x@effect$Ratios[[j-1]]$logHR), digits = 2)), ncol = 4)
         	write("     Subpopulation        Log HR       Std. Err.       Hazard Ratio", 
             	file = "")
         	for (i in 1:x@subpop@nsubpop) {
-              write(paste(format(temp[i, 1], width = 12),
-				  format(temp[i, 2], width = 19, nsmall = 6),
-				  format(temp[i, 3], width = 14, nsmall = 6),
-				  format(temp[i, 4], width = 15, nsmall = 2)), 
-                		  file = "")
+		  if (x@subpop@win@type == "tail-oriented" & i == (length(x@subpop@win@r1)+1)){
+                write(paste(format(temp[i, 1], width = 12),
+				    format(temp[i, 2], width = 19, nsmall = 6),
+				    format(temp[i, 3], width = 14, nsmall = 6),
+				    format(temp[i, 4], width = 15, nsmall = 2), "Overall"),
+                		    file = "")
+		    }
+		  else {
+                write(paste(format(temp[i, 1], width = 12),
+				    format(temp[i, 2], width = 19, nsmall = 6),
+				    format(temp[i, 3], width = 14, nsmall = 6),
+				    format(temp[i, 4], width = 15, nsmall = 2)),
+                		    file = "")
+		    }
         	}
-        	write(paste("        Overall",
-			format(round(x@effect$ologHR,      digits = 6), nsmall = 6, width = 16),
-			format(round(x@effect$ologHRSE,    digits = 6), nsmall = 6, width = 14),
-			format(round(exp(x@effect$ologHR), digits = 2), nsmall = 2, width = 15)),
-			file = "")
+	      if (x@subpop@win@type != "tail-oriented"){
+        	  write(paste("        Overall",
+			  format(round(x@effect$Ratios[[j-1]]$ologHR,      digits = 6), nsmall = 6, width = 16),
+			  format(round(x@effect$Ratios[[j-1]]$ologHRSE,    digits = 6), nsmall = 6, width = 14),
+			  format(round(exp(x@effect$Ratios[[j-1]]$ologHR), digits = 2), nsmall = 2, width = 15)),
+			  file = "")
+		}
         	cat("\n")
-
+	}
 }
 
-print.cov.KM <- function(stobj, timePoint){
-      cat("\n")
-	write(paste("The covariance matrix of the Kaplan-Meier differences at", 
-           	timePoint, "time units for the", stobj@subpop@nsubpop, "subpopulations is:"), 
-           	file = "")
-	print(stobj@result$sigma)
+print.cov.KM <- function(stobj, timePoint, trts){
+    if (!is.null(stobj@result)) {
+	for (j in 1:(stobj@result$ntrts-1)){
+	  ns <- stobj@subpop@nsubpop
+	  if (stobj@subpop@win@type == "tail-oriented") ns <- ns-1
+        cat("\n")
+	  write(paste("The covariance matrix of the Kaplan-Meier differences at", 
+             	timePoint, "time units for the", ns, "subpopulations is:"), 
+             	file = "")
+	  write(paste("trt ", trts[j+1], "vs. trt ", trts[1]), file = "")
+	  print(stobj@result$Res[[j]]$sigma)
       
-	cat("\n")
-	write(paste("The covariance matrix of the log hazard ratios for the", 
-          	stobj@subpop@nsubpop, "subpopulations is:"), file = "")
-      print(stobj@result$HRsigma)
-      cat("\n")
+	  cat("\n")
+	  write(paste("The covariance matrix of the log hazard ratios for the", 
+            	ns, "subpopulations is:"), file = "")
+        print(stobj@result$Res[[j]]$HRsigma)
+        cat("\n")
 
-	write(paste("The covariance matrix (based on homogeneous association) of the Kaplan-Meier differences at", 
-           	timePoint, "time units for the", stobj@subpop@nsubpop, "subpopulations is:"), 
-           	file = "")
-	print(stobj@result$hasigma)
+	  #write(paste("The covariance matrix (based on homogeneous association) of the Kaplan-Meier differences at", 
+        #     	timePoint, "time units for the", stobj@subpop@nsubpop, "subpopulations is:"), 
+        #     	file = "")
+	  #print(stobj@result$hasigma)
       
-	cat("\n")
-	write(paste("The covariance matrix (based on homogeneous association) of the log hazard ratios for the", 
-          	stobj@subpop@nsubpop, "subpopulations is:"), file = "")
-      print(stobj@result$haHRsigma)
-      cat("\n")
-
+	  #cat("\n")
+	  #write(paste("The covariance matrix (based on homogeneous association) of the log hazard ratios for the", 
+        #    	stobj@subpop@nsubpop, "subpopulations is:"), file = "")
+        #print(stobj@result$haHRsigma)
+        #cat("\n")
+	}
+    }
 }
 
-print.stat.KM <- function(pvalue, HRpvalue, chi2pvalue, hapvalue, haHRpvalue){
-	cat("\n")
-      write(paste("Supremum test results"), file = "")
-     	write(paste("Interaction P-value based on Kaplan-Meier estimates :", pvalue), file = "")
-	write(paste("Interaction P-value based on hazard ratio estimates :", HRpvalue), file = "")
+print.stat.KM <- function(stobj, trts){
+    if (!is.null(stobj@result)) {
+	for (j in 1:(stobj@result$ntrts-1)){
 
-	cat("\n")
-      write(paste("Chi-square test results"), file = "")
-      write(paste("Interaction P-value based on Kaplan-Meier estimates :", 
-     	      chi2pvalue), file = "")
+ 	  t <- stobj@result$Res[[j]]
+	  cat("\n")
+        write(paste("Supremum test results"), file = "")
+	  write(paste("trt ", trts[j+1], "vs. trt ", trts[1]), file = "")
+     	  write(paste("Interaction P-value based on Kaplan-Meier estimates :", t$pvalue), file = "")
+	  write(paste("Interaction P-value based on hazard ratio estimates :", t$HRpvalue), file = "")
 
-	cat("\n")
-      write(paste("Homogeneous association test results"), file = "")
-      write(paste("Interaction P-value based on Kaplan-Meier estimates :", 
-      	hapvalue), file = "")
-      write(paste("Interaction P-value based on hazard ratio estimates :", 
-      	haHRpvalue), file = "")
+	  cat("\n")
+        write(paste("Chi-square test results"), file = "")
+        write(paste("Interaction P-value based on Kaplan-Meier estimates :", 
+     	        t$chi2pvalue), file = "")
 
-	cat("\n")
+	  #cat("\n")
+        #write(paste("Homogeneous association test results"), file = "")
+        #write(paste("Interaction P-value based on Kaplan-Meier estimates :", 
+        #	hapvalue), file = "")
+        #write(paste("Interaction P-value based on hazard ratio estimates :", 
+        #	haHRpvalue), file = "")
+
+	  cat("\n")
+	}
+    }
 }
 
 setMethod("print",
@@ -594,22 +673,21 @@ setMethod("print",
 		#  1. estimates
 		#
 	      if (estimate){
-		  print.estimate.KM(stobj, x@timePoint)
+		  print.estimate.KM(stobj, x@timePoint, x@trts)
       	}
 
   		#
 		#   2. covariance matrices
 		#
     		if (cov){
-		  print.cov.KM(stobj, x@timePoint)
+		  print.cov.KM(stobj, x@timePoint, x@trts)
  		}
   
 		#
 		#   3. Supremum test and Chi-square test results
 		#
 		if (test){
- 	        t <- stobj@result
-		  print.stat.KM(t$pvalue, t$HRpvalue, t$chi2pvalue, t$hapvalue, t$haHRpvalue)
+		  print.stat.KM(stobj, x@trts)
 		}
  	 }
 )

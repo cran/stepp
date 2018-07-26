@@ -2,7 +2,7 @@
 \alias{stepp.test}
 %- ALSO NEED an '\alias' for EACH other topic documented here.
 \title{
-        a method to generate a complete steppes object with effect estimates and test statistics
+        The constructor to generate a complete steppes object with effect estimates and test statistics
 }
 \description{
   This is a constructor function for the steppes object.   In addition, it estimates all the effects of
@@ -24,8 +24,8 @@
 }
 
 \details{
-  Permutation tests for all the statistics are done (see ref by Bonetti below).  For best results, considering
-  using 2500 permutations to obtain a rich distribution in which to draw inference.\cr
+  Permutation tests for all the statistics are done (see ref below).  For best results, considering
+  using 2500 permutations to obtain a rich distribution from which to draw inference.\cr
 }
 
 \author{
@@ -37,19 +37,19 @@
 }
 \seealso{
   \code{\linkS4class{stwin}},     \code{\linkS4class{stsubpop}},  \code{\linkS4class{stmodelKM}},
-  \code{\linkS4class{stmodelCOX}},\code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}},
+  \code{\linkS4class{stmodelCI}}, \code{\linkS4class{stmodelGLM}},
   \code{\linkS4class{steppes}},    \code{\linkS4class{stmodel}},
   \code{\link{stepp.win}},        \code{\link{stepp.subpop}},     \code{\link{stepp.KM}},
-  \code{\link{stepp.CI}},         \code{\link{stepp.COX}},        \code{\link{stepp.GLM}},
+  \code{\link{stepp.CI}},         \code{\link{stepp.GLM}},
                                   \code{\link{estimate}},         \code{\link{generate}}
 }
 \examples{
-data(big)
+data(bigCI)
 
-rxgroup <- big$rxgroup
-time    <- big$time
-evt     <- big$event
-cov     <- big$ki67
+rxgroup <- bigCI$trt
+time    <- bigCI$time
+evt     <- bigCI$event
+cov     <- bigCI$ki67
 
 #
 # using constructor functions

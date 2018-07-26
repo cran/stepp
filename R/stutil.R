@@ -15,22 +15,27 @@ setGeneric("estimate", function(.Object,...)
 setGeneric("test", function(.Object,...)
 	standardGeneric("test"))	
 
+#setGeneric("subset1", function(.Object,...)
+#	standardGeneric("subset1"))
+
 #
 # internal routine to generate covariance matrix, pvalue
 #
 ssigma <- function(imatrix)
 {
       sigma <- var(imatrix)
+	sigmainv <- matrix(nrow=dim(sigma)[1], ncol=dim(sigma)[1])	# inverse matrix all NAs by default
+
 
 #     catch the error if we encounter a singularity problem when inverting the matrix sigma
 #
       tryCatch({
       	sigmainv <- solve(sigma)
 	      }, error = function(ex){
-		cat(geterrmessage())
-		cat("\n")
-		set.seed<-4593432
-		stop("STEPP has encountered an unexpected problem. Please retry. If problem persists, try different values of minpatspop(r1) and patspop(r2).")
+		#cat(geterrmessage())
+		#cat("\n")
+		#set.seed<-4593432
+		#stop("STEPP has encountered an unexpected problem. Please retry. If problem persists, try different values of minpatspop(r1) and patspop(r2).")
 	  	}
         )
      
