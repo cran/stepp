@@ -9,6 +9,7 @@ import(
   splines,
   grDevices,
   graphics,
+  scales,
   stats,
   utils
 )
@@ -21,13 +22,14 @@ importFrom(graphics, axis, legend, lines, mtext, par,
 importFrom(stats, as.formula, binomial, coef, cov,
            gaussian, median, na.omit, pchisq, poisson,
            predict, qnorm, var, vcov)
+importFrom(scales, viridis_pal, alpha)
 importFrom(utils, setTxtProgressBar, txtProgressBar)
 
-export(	stepp,
+export(stepp,
 	stepp.rnote,
-       	stepp_summary,
-       	stepp_print,
-       	stepp_plot,
+ 	stepp_summary,
+ 	stepp_print,
+ 	stepp_plot,
 	analyze.KM.stepp,
 	analyze.CumInc.stepp,
 	summary,
@@ -43,9 +45,9 @@ export(	stepp,
 	stepp.GLM,
 	stepp.test,
 	stepp.edge,
-	gen.tailwin
+	gen.tailwin,
+  balance_patients
 )
-
 
 exportClass(
 	stwin,
