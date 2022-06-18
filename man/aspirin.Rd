@@ -49,13 +49,13 @@ detach(aspirinc)
 trtA     <- rep(0, dim(aspirin1)[1])
 trtA[aspirin1[,"DOSE"] == 81] <- 1
 
-# STEPP analysis A: placebo vs 81 mg aspirin
+# STEPP analysis A: placebo vs. 81 mg aspirin
 attach(aspirin1)
 inc_win     <- stepp.win(type="sliding", r1=30, r2=100)
 inc_sp      <- stepp.subpop(swin=inc_win, cov=AGE)
 
 ADorLE      <- as.numeric(AD==1 | AL==1)
-modelA      <- stepp.GLM(coltrt=trtA, trts=c(0,1), colY=ADorLE, glm="binomial", debug=0)
+modelA      <- stepp.GLM(coltrt=trtA, trts=c(0,1), colY=ADorLE, glm="binomial")
 # Warning: In this example, the permutations have been set to 50 to allow the function
 # to finish in a short amount of time.  IT IS RECOMMEND TO USE AT LEAST 2500 PERMUTATIONS TO 
 # PROVIDE STABLE RESULTS.

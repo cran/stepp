@@ -12,13 +12,13 @@
 }
 
 \usage{
-  balance_patients(range_r1, range_r2, maxnsubpops, covar, verbose = FALSE,
-    plot = FALSE, contour = FALSE, nlevels = 5, border = FALSE)
+  balance_patients(range.r1, range.r2, maxnsubpops, covar, verbose = FALSE,
+    plot = FALSE, contour = FALSE, nlevels = 5, showstatus = TRUE)
 }
 
 \arguments{
-  \item{range_r1}{numeric vector with two elements providing the range of values for the r1 parameter}
-  \item{range_r2}{numeric vector with two elements providing the range of values for the r2 parameter}
+  \item{range.r1}{numeric vector with two elements providing the range of values for the r1 parameter}
+  \item{range.r2}{numeric vector with two elements providing the range of values for the r2 parameter}
   \item{maxnsubpops}{length-one numeric vector providing the maximum number of subpopulations to consider}
   \item{covar}{numeric vector containing the covariate values to use for generating the subpopulations}
   \item{verbose}{length-one logical vector; if \code{TRUE} prints a summary of the results in the console}
@@ -26,8 +26,7 @@
   \item{contour}{length-one logical vector; if \code{TRUE} adds to the plot the variance contour lines for each
   subpopulation number}
   \item{nlevels}{length-one numeric vector providing the number of contour lines to plot}
-  \item{border}{length-one logical vector; if \code{TRUE} adds to the plot some borders that separate the results
-  for different number of subpopulations}
+  \item{showstatus}{length-one logical vector; if \code{TRUE} displays a bar showing the progress of the calculations; default is TRUE}
 }
 
 \value{
@@ -58,12 +57,13 @@
 }
 
 \examples{
+\dontrun{
 data(balance_example, package = "stepp")
 ranger2 <- c(950, 1050)
 ranger1 <- c(300, 500)
 maxnsubpops <- 50
 
-\dontrun{res_bal <- balance_patients(ranger1, ranger2, maxnsubpops, balance_example$covar,
-  plot = TRUE, verbose = TRUE, contour = TRUE, nlevels = 6, border = TRUE)}
-
+res_bal <- balance_patients(ranger1, ranger2, maxnsubpops, balance_example$covar,
+  plot = TRUE, verbose = TRUE, contour = TRUE, nlevels = 6)
+}
 }

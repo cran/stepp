@@ -1,5 +1,5 @@
-balance_patients <- function(range_r1, range_r2, maxnsubpops, covar, verbose = FALSE,
-  plot = FALSE, contour = FALSE, nlevels = 5, border = FALSE) {
+balance_patients <- function(range.r1, range.r2, maxnsubpops, covar, verbose = FALSE,
+  plot = FALSE, contour = FALSE, nlevels = 5, showstatus = TRUE) { #, border = FALSE) {
   unbalance <- function(r1, r2, maxnsubp, frq, allfrq) {
     # We work with indices, not values
     # Note: indices of values are from 1 to k
@@ -48,26 +48,26 @@ balance_patients <- function(range_r1, range_r2, maxnsubpops, covar, verbose = F
     return(list(var = res_var, nsubpops = nsubpops, subpops = subpopsfin))
   }
 
-  if (length(range_r1) != 2) {
-    stop("range_r1 must contain two elements.")
+  if (length(range.r1) != 2) {
+    stop("range.r1 must contain two elements.")
   }
-  if (length(range_r2) != 2) {
-    stop("range_r2 must contain two elements.")
+  if (length(range.r2) != 2) {
+    stop("range.r2 must contain two elements.")
   }
-  if (diff(range_r1) < 0) {
-    stop("the elements of range_r1 must be in ascending order.")
+  if (diff(range.r1) < 0) {
+    stop("the elements of range.r1 must be in ascending order.")
   }
-  if (diff(range_r2) < 0) {
-    stop("the elements of range_r2 must be in ascending order.")
+  if (diff(range.r2) < 0) {
+    stop("the elements of range.r2 must be in ascending order.")
   }
-  if (range_r1[1] < 2) {
-    stop("the first element of range_r1 must be at least 2.")
+  if (range.r1[1] < 2) {
+    stop("the first element of range.r1 must be at least 2.")
   }
-  if (range_r2[1] < 2) {
-    stop("the first element of range_r2 must be at least 2.")
+  if (range.r2[1] < 2) {
+    stop("the first element of range.r2 must be at least 2.")
   }
-  range_r1 <- as.integer(range_r1)
-  range_r2 <- as.integer(range_r2)
+  range.r1 <- as.integer(range.r1)
+  range.r2 <- as.integer(range.r2)
   if (maxnsubpops < 2) {
     stop("maxnsubpops must be at least 2.")
   }
@@ -87,39 +87,51 @@ balance_patients <- function(range_r1, range_r2, maxnsubpops, covar, verbose = F
 
   bestr1 <- bestr2 <- rep(NA, maxnsubpops)
   resmat <- matrix(rep(NA,
-    5*(range_r1[2] - range_r1[1] + 1)*(range_r2[2] - range_r2[1] + 1)), ncol = 5)
+    5*(range.r1[2] - range.r1[1] + 1)*(range.r2[2] - range.r2[1] + 1)), ncol = 5)
   minvars <- rep(1e+99, maxnsubpops)
   nextind <- 1
   indbest <- 0
   varbest <- 1e+99
-  for (i in range_r1[1]:range_r1[2]) {
-    for (j in range_r2[1]:range_r2[2]) {
-      resunb <- unbalance(i, j, maxnsubpops, freqdist, allfreqs)
-      newvar <- resunb[[1]]
-      resmat[nextind, 1] <- i
-      resmat[nextind, 2] <- j
-      resmat[nextind, 3] <- newvar
-      resmat[nextind, 4] <- resunb[[2]]
-      if (newvar < minvars[resunb[[2]]]) {
-        bestr1[resunb[[2]]] <- i
-        bestr2[resunb[[2]]] <- j
-        minvars[resunb[[2]]] <- newvar
-      }
-      if (newvar < varbest) {
-        r1best <- i
-        r2best <- j
-        indbest <- resunb[[2]]
-        varbest <- newvar
+
+  if (showstatus) {
+    title <- "Searching for best values of r1 and r2 in each subpopulation...\n"
+    cat(title)
+    pb <- txtProgressBar(min = 0, max = diff(range(range.r1))*diff(range(range.r2)), style = 3)
+  }
+
+  for (i in range.r1[1]:range.r1[2]) {
+    for (j in range.r2[1]:range.r2[2]) {
+      if (i < j) {
+        if (showstatus) setTxtProgressBar(pb, nextind)
+        resunb <- unbalance(i, j, maxnsubpops, freqdist, allfreqs)
+        newvar <- resunb[[1]]
+        resmat[nextind, 1] <- i
+        resmat[nextind, 2] <- j
+        resmat[nextind, 3] <- newvar
+        resmat[nextind, 4] <- resunb[[2]]
+        if (newvar < minvars[resunb[[2]]]) {
+          bestr1[resunb[[2]]] <- i
+          bestr2[resunb[[2]]] <- j
+          minvars[resunb[[2]]] <- newvar
+        }
+        if (newvar < varbest) {
+          r1best <- i
+          r2best <- j
+          indbest <- resunb[[2]]
+          varbest <- newvar
+        }
       }
       nextind <- nextind + 1
     }
   }
 
+  if (showstatus) close(pb)
+
   if (verbose) {
     cat("Balanced subpopulations determination (number of patients)\n")
     cat("\n")
-    cat(paste("Range for number of patients in common in consecutive subpopulations (r1):", range_r1[1], "<-->", range_r1[2], "\n"))
-    cat(paste("Range for number of patients per subpopulation (r2):", range_r2[1], "<-->", range_r2[2]), "\n")
+    cat(paste("Range for number of patients in common in consecutive subpopulations (r1):", range.r1[1], "<-->", range.r1[2], "\n"))
+    cat(paste("Range for number of patients per subpopulation (r2):", range.r2[1], "<-->", range.r2[2]), "\n")
     cat("\n")
 
     for (i in 1:maxnsubpops) {
@@ -165,29 +177,29 @@ balance_patients <- function(range_r1, range_r2, maxnsubpops, covar, verbose = F
     # There are 8 (i.e. nlogvar - 1) shades of color from 0/8 to 7/8 (8/8 is white).
     nlogvar <- 9
     logvar <- log(resmat[, 3])
-    cutoffs <- seq(min(logvar), max(logvar), length.out = nlogvar)
+    cutoffs <- seq(min(logvar, na.rm = TRUE), max(logvar, na.rm = TRUE), length.out = nlogvar)
     resmat[, 5] <- sapply(as.list(logvar),
       function(x) (sum(cutoffs <= x) - 1)/(nlogvar - 1))
 
-    if (diff(range(range_r1)) >= 10 && diff(range(range_r2)) >= 10) {
+    if (diff(range(range.r1)) >= 10 && diff(range(range.r2)) >= 10) {
       def.par <- par(no.readonly = TRUE)
       nf <- graphics::layout(c(1, 2), heights = c(10, 2))
       nsubpops <- sort(unique(resmat[, 4]))
       clrs <- scales::viridis_pal(option = "viridis", direction = -1)(length(nsubpops))
       if (contour) {
-        var_arr <- array(NA, dim = c(max(range_r1), max(range_r2), maxnsubpops),
-          dimnames = list(r1 = 1:max(range_r1), r2 = 1:max(range_r2),
+        var_arr <- array(NA, dim = c(max(range.r1), max(range.r2), maxnsubpops),
+          dimnames = list(r1 = 1:max(range.r1), r2 = 1:max(range.r2),
             nsubpops = 1:maxnsubpops))
       }
-      if (border) {
-        r2_arr <- array(NA, dim = c(max(range_r1), max(range_r2), maxnsubpops),
-          dimnames = list(r1 = 1:max(range_r1), r2 = 1:max(range_r2),
-            nsubpops = 1:maxnsubpops))
-      }
+      # if (border) {
+      #   r2_arr <- array(NA, dim = c(max(range.r1), max(range.r2), maxnsubpops),
+      #     dimnames = list(r1 = 1:max(range.r1), r2 = 1:max(range.r2),
+      #       nsubpops = 1:maxnsubpops))
+      # }
       
       # plot heatmap with subpopulation variances
       par(mar = c(5, 5, 4, 1))
-      plot(range_r1, range_r2, type = "n",
+      plot(range.r1, range.r2, type = "n",
            xlab = expression(italic(r)[1]), ylab = expression(italic(r)[2]),
            main = "Subpopulations (colors, see the legend below)\nand variances (shades of color, darker is smaller)")
       for (i in 1:length(nsubpops)) {
@@ -200,53 +212,55 @@ balance_patients <- function(range_r1, range_r2, maxnsubpops, covar, verbose = F
         if (contour) {
           for (j in 1:length(r1_unique)) {
             r2_unique <- sort(unique(resmat_sub[resmat_sub[, 1] == r1_unique[j], 2]))
+            var_idx <- resmat_sub[, 1] == r1_unique[j]
+            var_idx[is.na(var_idx)] <- FALSE
             var_arr[r1_unique[j], r2_unique, nsubpops[i]] <- 
-              resmat_sub[resmat_sub[, 1] == r1_unique[j], 3]
+              resmat_sub[var_idx, 3]
           }
         }
-        if (border) {
-          for (j in 1:length(r1_unique)) {
-            r2_unique <- sort(unique(resmat_sub[resmat_sub[, 1] == r1_unique[j], 2]))
-            r2_arr[r1_unique[j], r2_unique, nsubpops[i]] <- r2_unique
-          }
-        }
+        # if (border) {
+        #   for (j in 1:length(r1_unique)) {
+        #     r2_unique <- sort(unique(resmat_sub[resmat_sub[, 1] == r1_unique[j], 2]))
+        #     r2_arr[r1_unique[j], r2_unique, nsubpops[i]] <- r2_unique
+        #   }
+        # }
       }
       if (contour) {
-        var_arr <- var_arr[-setdiff(1:max(range_r1), min(range_r1):max(range_r1)),
-          -setdiff(1:max(range_r2), min(range_r2):max(range_r2)),
+        var_arr <- var_arr[-setdiff(1:max(range.r1), min(range.r1):max(range.r1)),
+          -setdiff(1:max(range.r2), min(range.r2):max(range.r2)),
           -setdiff(1:maxnsubpops, nsubpops), drop = FALSE]
         for (i in 1:length(nsubpops)) {
-          contour(min(range_r1):max(range_r1), min(range_r2):max(range_r2),
+          contour(min(range.r1):max(range.r1), min(range.r2):max(range.r2),
             var_arr[, , i], add = TRUE, nlevels = nlevels, col = gray(.4, alpha = .6))
         }
       }
-      if (border) {
-        r2_arr <- r2_arr[-setdiff(1:max(range_r1), min(range_r1):max(range_r1)),
-          -setdiff(1:max(range_r2), min(range_r2):max(range_r2)),
-          -setdiff(1:maxnsubpops, nsubpops), drop = FALSE]
-        r2_min <- apply(r2_arr, c(1, 3),
-          function(x) {
-            tmp <- x[!is.na(x)]
-            if (length(tmp)) {
-              res <- min(tmp, na.rm = TRUE)
-              ifelse(is.infinite(res), NA, res)
-            } else {
-              NA
-            }
-          }
-        )
-        for (i in 1:length(nsubpops)) {
-          brd_dat <- na.omit(cbind(min(range_r1):max(range_r1), r2_min[, i]))
-          brd_x <- brd_dat[, 1] - .5
-          brd_x[1] <- brd_x[1] + .5
-          brd_x[nrow(brd_dat)] <- brd_x[nrow(brd_dat)] + .5
-          brd_x <- c(brd_x, brd_x[nrow(brd_dat)])
-          brd_y <- brd_dat[, 2] - .5
-          brd_y <- c(brd_y, max(range_r2))
-          lines(brd_x, brd_y, type = "s", lwd = 2, col = gray(.5))
-        }
-      }
-      points(bestr1, bestr2, pch = 1, col = "darkblue", lwd = 2)
+      # if (border) {
+      #   r2_arr <- r2_arr[-setdiff(1:max(range.r1), min(range.r1):max(range.r1)),
+      #     -setdiff(1:max(range.r2), min(range.r2):max(range.r2)),
+      #     -setdiff(1:maxnsubpops, nsubpops), drop = FALSE]
+      #   r2_min <- apply(r2_arr, c(1, 3),
+      #     function(x) {
+      #       tmp <- x[!is.na(x)]
+      #       if (length(tmp)) {
+      #         res <- min(tmp, na.rm = TRUE)
+      #         ifelse(is.infinite(res), NA, res)
+      #       } else {
+      #         NA
+      #       }
+      #     }
+      #   )
+      #   for (i in 1:length(nsubpops)) {
+      #     brd_dat <- na.omit(cbind(min(range.r1):max(range.r1), r2_min[, i]))
+      #     brd_x <- brd_dat[, 1] - .5
+      #     brd_x[1] <- brd_x[1] + .5
+      #     brd_x[nrow(brd_dat)] <- brd_x[nrow(brd_dat)] + .5
+      #     brd_x <- c(brd_x, brd_x[nrow(brd_dat)])
+      #     brd_y <- brd_dat[, 2] - .5
+      #     brd_y <- c(brd_y, max(range.r2))
+      #     lines(brd_x, brd_y, type = "s", lwd = 2, col = gray(.5))
+      #   }
+      # }
+      points(bestr1, bestr2, pch = 1, col = "darkblue", lwd = 2, cex = .5)
       points(bestr1[indbest], bestr2[indbest], pch = 4, col = "red", lwd = 3, cex = 1.1)
       
       # plot legend

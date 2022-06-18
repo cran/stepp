@@ -16,26 +16,34 @@ generate.all <- function(sp, win, covariate, coltype = NULL, coltrt = NULL, trts
   if (win@type == "tail-oriented") {
     zvals   <- unique(sort(covariate))
     if (min(r1) < min(zvals) | max(r2) > max(zvals)) stop("Cannot create tail-oriented window")
-    nsubpop <- length(r1)+length(r2)+1
+    # nsubpop <- length(r1) + length(r2) + 1 ### [SV 27.02.2021: shouldn't it be length(r1)+length(r2)?]
+    nsubpop <- length(r1) +length(r2)
     npatsub <- rep(0, nsubpop)
     I0      <- rep(1, nsubpop)
     I1      <- rep(length(zvals), nsubpop)
-    if (length(r1) != 0) {
+    # if (length(r1) != 0) { ### [SV 27.02.2021: shouldn't it be > 1?]
+    if (length(r1) > 1) {
       for (i in 1:length(r1)) {
         npatsub[i] <- sum(covariate <= r1[i])
-        sel    <- which(zvals <= r1[i])
-        I1[i]      <- sel[length(sel)]
+        sel <- which(zvals <= r1[i])
+        I1[i] <- sel[length(sel)]
       }
+      npatsub[length(r1) + 1] <- length(covariate)
     }
-    npatsub[length(r1)+1] <- length(covariate)
-    if (length(r2) != 0) {
+    # if (length(r2) != 0) { ### [SV 27.02.2021: shouldn't it be > 1?]
+    if (length(r2) > 1) {
+      npatsub[1] <- length(covariate)
       for (i in 1:length(r2)) {
-        k <- i+length(r1)+1
+        k <- i + length(r1)
         npatsub[k] <- sum(covariate >= r2[i])
-        I0[k]  <- which(zvals >= r2[i])[1]
+        I0[k] <- which(zvals >= r2[i])[1]
       }
     }
   } else if (win@type == "sliding") {
+    if (r2 >= length(covariate)) {
+      errmsg <- "patspop (r2) must be strictly smaller than the number of unique covariate values."
+      stop(errmsg)
+    }
     zvals <- unique(sort(covariate))
     absfreq <- as.numeric(table(covariate))
     cumfreq <- cumsum(absfreq)
@@ -138,7 +146,7 @@ generate.all <- function(sp, win, covariate, coltype = NULL, coltrt = NULL, trts
     # insufficient events to satisfy E2.
     #
     if (I1[1] >= length(covariate)) {
-      obsInitialSubpopCreationFailures <- obsInitialSubpopCreationFailures + 1
+      # obsInitialSubpopCreationFailures <- obsInitialSubpopCreationFailures + 1
       print(paste("Warning: Insufficient Type 1 Events found creating initial subpopulation (",
                   "Trt0=", cumtypevalsTrt0[length(cumtypevalsTrt0)],
                    " Trt1=", cumtypevalsTrt1[length(cumtypevalsTrt1)], ")", sep=""))
@@ -193,7 +201,7 @@ generate.all <- function(sp, win, covariate, coltype = NULL, coltrt = NULL, trts
     # Make sure there are enough subpopulations
     #
     if (nsubpop < minsubpops) {
-      obsInsufficientSubpopsErrors <- obsInsufficientSubpopsErrors + 1
+      # obsInsufficientSubpopsErrors <- obsInsufficientSubpopsErrors + 1
       print(paste("Warning: too few subpopulations (", nsubpop, ")", sep = ""))
       stop("Throwing out dataset.")
     }
@@ -213,31 +221,25 @@ generate.all <- function(sp, win, covariate, coltype = NULL, coltrt = NULL, trts
   }
 
   medians <- rep(0,  nsubpop)
-  minz    <- rep(NA, nsubpop)
   minc    <- rep(NA, nsubpop)
-  maxz    <- rep(NA, nsubpop)
   maxc    <- rep(NA, nsubpop)
   npats   <- length(covariate)
   subpop  <- matrix(rep(0, (npats*nsubpop)), ncol = nsubpop)
   for (i in 1:nsubpop) {
     subpop[, i] <- (covariate >= zvals[I0[i]]) * (covariate <= zvals[I1[i]])
     medians[i]  <- round((median(covariate[subpop[, i] == 1])), digits = 2)
-    minz[i]     <- round(zvals[I0[i]], digits = 4)
     minc[i]     <- zvals[I0[i]]
-    maxz[i]     <- round(zvals[I1[i]], digits = 4)
     maxc[i]     <- zvals[I1[i]]
   }
 
   # update the object
   sp@win <- win
-  sp@colvar <- covariate
+  sp@covar <- covariate
   sp@nsubpop <- nsubpop
   sp@subpop <- subpop
   sp@npatsub <- npatsub
   sp@medianz <- medians
-  sp@minz <- minz
   sp@minc <- minc
-  sp@maxz <- maxz
   sp@maxc <- maxc
   if (sp@win@type == "sliding_events") {
     sp@neventsubTrt0 <- neventsubTrt0
@@ -254,13 +256,11 @@ generate.all <- function(sp, win, covariate, coltype = NULL, coltrt = NULL, trts
 setClass("stsubpop",
   representation(
     win      = "stwin",   # stepp window object
-    colvar   = "numeric", # vector of covariate of interest (V) 
+    covar   = "numeric", # vector of covariate of interest (V) 
     nsubpop  = "numeric", # number of subpopulation generated
     subpop   = "ANY",     # matrix of subpopulations
     npatsub  = "numeric", # count of each subpopulation
     medianz  = "numeric", # median of V for each subpopulation
-    minz     = "numeric", # minimum of V for each subpopulation, round to 4 digits
-    maxz     = "numeric", # maximum of V for each subpopulation, round to 4 digits
     minc     = "numeric", # minimum of V for each subpopulation, actual
     maxc     = "numeric", # maximum of V for each subpopulation, actual
     neventsubTrt0 = "null_or_numeric",
@@ -271,14 +271,14 @@ setClass("stsubpop",
 
 setMethod("initialize", "stsubpop",
   function(.Object) {
-    .Object@init    <- FALSE
+    .Object@init <- FALSE
     return(.Object)
   }
 )
 
 setValidity("stsubpop", 
   function(object) {
-    if (!is.numeric(object@colvar) || length(object@colvar) < object@win@r2) {
+    if (!is.numeric(object@covar) || length(object@covar) < object@win@r2) {
       print("Invalid argument.")
       return (FALSE)
     }
@@ -291,7 +291,10 @@ setGeneric("generate", function(.Object, win, covariate, coltype, coltrt, trts, 
 
 setMethod("generate", 
   signature="stsubpop",
-  definition=function(.Object, win, covariate, coltype, coltrt, trts, minsubpops) {
+  definition = function(.Object, win, covariate, coltype, coltrt, trts, minsubpops) {
+    if (missing(minsubpops)) {
+      minsubpops <- 2
+    }
     .Object <- generate.all(.Object, win, covariate, coltype, coltrt, trts, minsubpops)
     return(.Object)
   }
@@ -331,30 +334,24 @@ setMethod("merge",
       }
 
       medianz <- rep(0, nsubpop.new)
-      minz    <- rep(0, nsubpop.new)
       minc    <- rep(0, nsubpop.new)
-      maxz    <- rep(0, nsubpop.new)
       maxc    <- rep(0, nsubpop.new)
 
-      covariate <- .Object@colvar
+      covariate <- .Object@covar
       for (i in 1:nsubpop.new) {
         subpop.cov <- covariate[subpop.matrix[, i] == 1]
         medianz[i] <- round((median(subpop.cov)), digits = 2)
         minc[i]    <- min(subpop.cov)
-        minz[i]    <- round(minc[i],digits=4)
         maxc[i]    <- max(subpop.cov)
-        maxz[i]    <- round(maxc[i],digits=4)
       }
 
       subp.new@win     <- .Object@win
-      subp.new@colvar  <- .Object@colvar
+      subp.new@covar  <- .Object@covar
       subp.new@nsubpop <- nsubpop.new
       subp.new@npatsub <- apply(subpop.matrix,2,sum)
       subp.new@subpop  <- subpop.matrix
       subp.new@medianz <- medianz
-      subp.new@minz    <- minz
       subp.new@minc    <- minc
-      subp.new@maxz    <- maxz
       subp.new@maxc    <- maxc
       subp.new@neventsubTrt0 <- .Object@neventsubTrt0
       subp.new@neventsubTrt1 <- .Object@neventsubTrt1
@@ -373,7 +370,7 @@ setMethod("edge",
     if (side=="L" & j ==1) stop("invalid arg j.")
 
     # sort the covariate value
-    covariate <- .Object@colvar
+    covariate <- .Object@covar
     Z <- sort(covariate)
     ZU <- unique(Z)
 
@@ -398,9 +395,7 @@ setMethod("edge",
     # create a special stepp subpopulation just for this edge
     subpop.matrix <- matrix(rep(0, (length(covariate) * n)), ncol = n)
     medianz <- rep(0, n)
-    minz    <- rep(0, n)
     minc    <- rep(0, n)
-    maxz    <- rep(0, n)
     maxc    <- rep(0, n)
 
     # print(paste(side, "j=",j, "start=",start, "n=",n,ZU[start], ZU[start+n-1]))
@@ -413,21 +408,17 @@ setMethod("edge",
       subpop.cov <- covariate[subpop.matrix[, i] == 1]
       medianz[i] <- round((median(subpop.cov)), digits = 2)
       minc[i]    <- min(subpop.cov)
-      minz[i]    <- round(minc[i],digits=4)
       maxc[i]    <- max(subpop.cov)
-      maxz[i]    <- round(maxc[i],digits=4)
     }
 
     subp.new         <- new("stsubpop")
     subp.new@win     <- .Object@win
-    subp.new@colvar  <- .Object@colvar
+    subp.new@covar  <- .Object@covar
     subp.new@nsubpop <- n
     subp.new@subpop  <- subpop.matrix
     subp.new@npatsub <- apply(subpop.matrix,2,sum)
     subp.new@medianz <- medianz
-    subp.new@minz    <- minz
     subp.new@minc    <- minc
-    subp.new@maxz    <- maxz
     subp.new@maxc    <- maxc
     subp.new@neventsubTrt0 <- .Object@neventsubTrt0
     subp.new@neventsubTrt1 <- .Object@neventsubTrt1
@@ -447,8 +438,8 @@ setMethod("summary",
         cat("\n")
         write("Subpopulation summary information", file = "")
         nper <- apply(object@subpop, 2, sum)
-        temp <- matrix(c(1:object@nsubpop, object@medianz, object@minz, object@maxz, nper,
-          object@neventsubTrt0, object@neventsubTrt1), ncol = 7)
+        temp <- matrix(c(1:object@nsubpop, object@medianz, round(object@minc, digits = 4),
+          round(object@maxc, digits = 4), nper, object@neventsubTrt0, object@neventsubTrt1), ncol = 7)
         write("                         Covariate Summary               Sample        Type 1 Events", file = "")
         write(" Subpopulation    Median      Minimum      Maximum         Size  Trt Group 1   Trt Group 2", file = "")
         for (i in 1:object@nsubpop) {
@@ -462,14 +453,19 @@ setMethod("summary",
         cat("\n")
         write("Subpopulation summary information (including all treatments)", file = "")
         nper <- apply(object@subpop, 2 ,sum)
-        temp <- matrix(c(1:object@nsubpop, object@medianz, object@minz, object@maxz, nper), ncol = 5)
+        temp <- matrix(c(1:object@nsubpop, object@medianz, round(object@minc, digits = 4),
+          round(object@maxc, digits = 4), nper), ncol = 5)
         write("                                  Covariate Summary                 Sample", file = "")
         write("     Subpopulation        Median       Minimum       Maximum          size", file = "")
         for (i in 1:object@nsubpop) {
-          if (object@win@type == "tail-oriented" & i == length(object@win@r1) + 1) {
+          if (object@win@type == "tail-oriented" & i == length(object@win@r1) + 1 & length(object@win@r1) > 1) {
             write(paste(format(temp[i, 1], width = 12), format(temp[i, 2], width = 19, nsmall = 2),
               format(temp[i, 3], width = 13, nsmall = 4), format(temp[i, 4], width = 13, nsmall = 4),
-              format(temp[i, 5], width = 13), "Entire cohort"), file = "")
+              format(temp[i, 5], width = 13), "(entire cohort)"), file = "")
+          } else if (object@win@type == "tail-oriented" & i == 1 & length(object@win@r2) > 1) {
+            write(paste(format(temp[i, 1], width = 12), format(temp[i, 2], width = 19, nsmall = 2),
+              format(temp[i, 3], width = 13, nsmall = 4), format(temp[i, 4], width = 13, nsmall = 4),
+              format(temp[i, 5], width = 13), "(entire cohort)"), file = "")
           } else {
             write(paste(format(temp[i, 1], width = 12), format(temp[i, 2], width = 19, nsmall = 2),
               format(temp[i, 3], width = 13, nsmall = 4), format(temp[i, 4], width = 13, nsmall = 4),
