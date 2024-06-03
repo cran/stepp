@@ -1,8 +1,8 @@
 Package: stepp
 Type: Package
 Title: Subpopulation Treatment Effect Pattern Plot (STEPP)
-Version: 3.2.6
-Date: 2023-11-30
+Version: 3.2.7
+Date: 2024-06-02
 Author: Wai-ki Yip [aut, cre],
   Ann Lazar [ctb],
   David Zahrieh [ctb],
@@ -27,6 +27,6 @@ License: GPL (>= 2)
 URL: https://www.r-project.org
 LazyLoad: yes
 NeedsCompilation: yes
-Packaged: 2023-12-17 21:48:34 UTC; wkyip
+Packaged: 2024-06-03 00:38:51 UTC; wkyip
 Repository: CRAN
-Date/Publication: 2023-12-18 04:20:02 UTC
+Date/Publication: 2024-06-03 02:20:02 UTC
